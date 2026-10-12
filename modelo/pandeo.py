@@ -107,12 +107,12 @@ def barrido(nombre, kw, combo, lam_max=4.0, dlam=0.5, parcial=None):
     return out
 
 
-T_MAX_CASO = 50 * 60      # s por caso; si se alcanza sin divergencia se reporta como cota inferior
+T_MAX_CASO = 60 * 60      # s por caso; si se alcanza sin divergencia se reporta como cota inferior
 # Antes de declarar perdida de convergencia se reintenta el incremento con pasos menores y otros
 # algoritmos, para no confundir una dificultad numerica con un limite de estabilidad.
 INTENTOS = [(1, 'Newton', 40), (4, 'Newton', 40), (16, 'NewtonLineSearch', 100), (16, 'KrylovNewton', 100)]
 T = P.TABLERO
-LP = dict(E_tablero=T['E'] / (1 + T['kdef']), k_union=P.K_UNION / (1 + T['kdef']))
+LP = dict(E_tablero=T['E'] / (1 + T['kdef']), k_union=P.K_UNION / (1 + 2 * T['kdef']))   # EN 1995 2.3.2.2(3)
 CASOS = [
     ('proyecto, ELU con E/gamma_M', dict(E_tablero=T['E'] / T['gamma_M']), 'ELU-T1 1.35G+1.5Q'),
     ('proyecto, largo plazo E_fin', LP, 'ELS G+0.8Q'),

@@ -250,7 +250,7 @@ def fig_pandeo(pandeo):
         ax.set_xlabel('abombamiento máximo de laterales (mm)')
         ax.set_xlim(0, X_MAX_PANDEO)
     axs[0].set_ylabel('factor de carga λ')
-    axs[0].legend(fontsize=8, loc='lower right')
+    axs[0].legend(fontsize=8, loc='upper right')
     fig.tight_layout()
     return guardar(fig, 'fig06_pandeo.png')
 

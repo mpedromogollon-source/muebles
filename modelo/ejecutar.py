@@ -21,7 +21,8 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SALIDA = os.path.join(RAIZ, 'resultados')
 
 T = P.TABLERO
-LP = dict(E_tablero=T['E'] / (1 + T['kdef']), k_union=P.K_UNION / (1 + T['kdef']))
+# EN 1995-1-1 2.3.2.2(3): en uniones entre elementos de igual fluencia (tablero con tablero) kdef se duplica
+LP = dict(E_tablero=T['E'] / (1 + T['kdef']), k_union=P.K_UNION / (1 + 2 * T['kdef']))
 ELU_ELS = ['ELU-A1 1.2G+1.6Q', 'ELU-A2 1.4G', 'ELU-T1 1.35G+1.5Q', 'ELU-T2 1.35G', 'ELS G+Q', 'ELS G+0.8Q']
 
 PTR_ELU_ELS = ['ELU-A1 1.2G+1.6Q', 'ELU-A2 1.4G', 'ELS G+Q', 'ELS G+0.8Q']
@@ -59,6 +60,12 @@ VARIANTES = {
                                                            perfil='30x30 cal. 18', k_fijacion=K_PIJAS / (1 + T['kdef'])),
                                                       ['ELS G+0.8Q']),
     'sismo con anclajes': (dict(anclajes_muro=True), ['SISMO G+0.8Q+H']),
+    # pijas con la rigidez de EN 1995 (Kser); en largo plazo Kser/(1 + kdef), union acero contra tablero
+    **{f'relleno y entrepano{c} kser a {s_:.0f} mm{lp}': (
+        dict(con_relleno=True, con_entrepano=True, perfil=f'30x30 cal. {cal}',
+             k_fijacion=P.PIJA['Kser'] / s_ / ((1 + T['kdef']) if lp else 1.0), **(LP if lp else {})),
+        ['ELS G+0.8Q'] if lp else ELU_ELS)
+       for c, cal in (('', 16), (' cal. 14', 14)) for s_ in (150.0, 75.0) for lp in ('', ' largo plazo')},
     'relleno y entrepano cal. 14 pijas': (dict(con_relleno=True, con_entrepano=True, perfil='30x30 cal. 14',
                                                k_fijacion=K_PIJAS), ELU_ELS),
     'relleno y entrepano cal. 14 pijas largo plazo': (dict(LP, con_relleno=True, con_entrepano=True,
@@ -71,11 +78,13 @@ VARIANTES = {
 # EN 1995-1-1 2.3.2.2(2): cuando el reparto de esfuerzos depende de la rigidez, el estado limite ultimo se revisa
 # tambien con valores finales E/(1 + psi2 kdef), con psi2 de la accion variable principal (almacenamiento)
 FIN = dict(E_tablero=T['E'] / (1 + T['psi2_almacen'] * T['kdef']),
-           k_union=P.K_UNION / (1 + T['psi2_almacen'] * T['kdef']))
+           k_union=P.K_UNION / (1 + 2 * T['psi2_almacen'] * T['kdef']))
 ELU = ['ELU-A1 1.2G+1.6Q', 'ELU-A2 1.4G', 'ELU-T1 1.35G+1.5Q', 'ELU-T2 1.35G']
 for _v in ('base', 'relleno', 'relleno y entrepano', 'relleno y entrepano cal. 18', '30x30 cal. 18', '30x30 cal. 14',
            'sin tornillos entre maleteros', 'relleno sin tornillos entre maleteros', 'relleno y entrepano pijas',
-           'relleno y entrepano cal. 14 pijas'):
+           'relleno y entrepano cal. 14 pijas', 'relleno y entrepano cal. 14 kser a 150 mm',
+           'relleno y entrepano cal. 14 kser a 75 mm', 'relleno y entrepano kser a 150 mm',
+           'relleno y entrepano kser a 75 mm'):
     _kw = dict(VARIANTES[_v][0], **FIN)
     if 'k_fijacion' in _kw:
         _kw['k_fijacion'] = _kw['k_fijacion'] / (1 + T['psi2_almacen'] * T['kdef'])
@@ -161,7 +170,7 @@ def main():
     os.makedirs(SALIDA, exist_ok=True)
     t0 = time.time()
     nombres = sys.argv[1:] or list(VARIANTES)
-    with ProcessPoolExecutor(max_workers=4) as ex:
+    with ProcessPoolExecutor(max_workers=int(os.environ.get('N_PROC', 4))) as ex:
         res = dict(zip(nombres, ex.map(correr, nombres)))
     previo = os.path.join(SALIDA, 'resultados.pkl')
     if sys.argv[1:] and os.path.exists(previo):

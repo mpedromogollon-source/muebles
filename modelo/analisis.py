@@ -72,12 +72,15 @@ def ptr_diagramas(m, R):
         xs = m.ptr_x
         M = np.zeros(len(xs))
         V = np.zeros(len(xs))
+        N = np.zeros(len(xs))
         M[:-1] = lf[:, 4]
         M[-1] = -lf[-1, 10]
         V[:-1] = lf[:, 2]
         V[-1] = -lf[-1, 8]
+        N[:-1] = lf[:, 0]
+        N[-1] = -lf[-1, 6]
         uz = np.array([R['desp'][n][2] for n in m.ptr_nodos[nombre]])
-        out[nombre] = dict(x=xs, M=M, V=V, uz=uz)
+        out[nombre] = dict(x=xs, M=M, V=V, N=N, uz=uz)
     # convencion: momento positivo en el centro del claro
     for d in out.values():
         i = int(np.argmin(abs(d['x'] - 6240)))

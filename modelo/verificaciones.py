@@ -24,7 +24,8 @@ VARS = ('base', 'relleno', 'relleno y entrepano')
 VARS_PERFIL = ('30x30 cal. 18', '30x30 cal. 14', 'PTR 3x3 pulg')
 VARS_EXTRA = ('sin tornillos entre maleteros', 'relleno sin tornillos entre maleteros', 'relleno y entrepano cal. 18')
 VARS_PIJAS = ('relleno y entrepano pijas', 'relleno y entrepano cal. 18 pijas', 'relleno y entrepano cal. 14 pijas',
-              'relleno y entrepano pijas a 75 mm')
+              'relleno y entrepano pijas a 75 mm', 'relleno y entrepano kser a 150 mm', 'relleno y entrepano kser a 75 mm',
+              'relleno y entrepano cal. 14 kser a 150 mm', 'relleno y entrepano cal. 14 kser a 75 mm')
 
 
 # ------------------------------------------------------------------ PTR, AISC 360-16 LRFD
@@ -109,9 +110,16 @@ def verificar_ptr(res, variante):
             Mu, Vu = max_ptr(r)
             Rext = max(v.get('lateral exterior', 0.0) for v in r['apoyos_ptr'].values())
             Rint = max(v.get('lateral aire', 0.0) for v in r['apoyos_ptr'].values())
-            filas.append(dict(combo=c, rigidez=rig, Mu=Mu, Vu=Vu, Ru_ext=Rext, Ru_int=Rint, u_M=Mu / cap['phiMn'],
+            # flexion con axial, AISC H1-1: el tubo esta fijado a los tableros a cada 150 mm o menos, asi que su
+            # esbeltez a compresion es despreciable y Pc = 0.9 Fy A en traccion y en compresion
+            Nu = max((max(np.abs(d['N'])) for d in r['ptr'].values() if 'N' in d), default=0.0)
+            Pc = 0.9 * P.ACERO['Fy'] * cap['A']
+            pr = Nu / Pc
+            u_H1 = pr + 8 / 9 * Mu / cap['phiMn'] if pr >= 0.2 else pr / 2 + Mu / cap['phiMn']
+            filas.append(dict(combo=c, rigidez=rig, Mu=Mu, Vu=Vu, Nu=Nu, Ru_ext=Rext, Ru_int=Rint,
+                              u_M=Mu / cap['phiMn'], u_H1=u_H1,
                               u_V=Vu / cap['phiVn'], u_R=max(Rext / cap['phiRn_ext'], Rint / cap['phiRn_int'])))
-    filas.sort(key=lambda f: -f['u_M'])
+    filas.sort(key=lambda f: -f['u_H1'])
     return cap, filas
 
 
@@ -172,13 +180,15 @@ LARGO_ESQUINA = 30.0                 # largo de canto del trasero que se asigna 
 
 
 def apoyo_tableros(res, variante, combo='ELU-T1 1.35G+1.5Q'):
-    """Compresion de canto bajo el PTR (torre izquierda), con las fuerzas de contacto por nodo.
+    """Compresion de canto bajo el PTR (torre izquierda). La reaccion de cada tablero es la suma de sus fuerzas
+    de contacto por nodo y se reparte uniforme en el area de contacto.
 
-    Laterales: reaccion total del tablero bajo el PTR entre 15 mm por el solape en y con la huella del tubo.
+    Laterales: 15 mm por el solape en y con la huella del tubo.
     PTR trasero: el tubo se arquea sobre la torre y apoya casi todo en la esquina del lateral aire con el
     trasero, asi que se revisa la esquina en conjunto (lateral aire, 15 x 15 mm, y trasero en 30 mm de largo).
-    Con suplemento de canto (tablero de 15 mm encolado y atornillado a la cara interior del lateral aire, a ras
-    de su canto superior) el ancho en x del lateral aire pasa de 15 a 30 mm.
+    Con suplemento de canto (tablero de 15 mm atornillado a la cara del lateral aire que da al hueco central, a ras
+    de su canto superior) el ancho en x del lateral aire pasa de 15 a 30 mm. La parte de la reaccion que toma el
+    suplemento pasa al lateral aire por tornillos pasantes M6, que se cuentan por extremo.
     """
     T = P.TABLERO
     e = T['espesor']
@@ -188,10 +198,12 @@ def apoyo_tableros(res, variante, combo='ELU-T1 1.35G+1.5Q'):
     rangos = _rango_y_piezas()
     nodos = [c for c in r['contactos_nodo'] if c['grupo'] == 'torre izq']
     out = []
+    Fv_M6 = T['kmod_largo'] * P.johansen_tablero_tablero(6.0, e, e, 400.0) / T['gamma_M']
 
-    def fila(apoyo, R, area, area_sup):
+    def fila(apoyo, R, area, area_sup, R_sup=0.0):
         out.append(dict(apoyo=apoyo, R=R, area=area, sigma=R / area, fc_d=fc_d, u=R / area / fc_d,
-                        u_suplemento=R / area_sup / fc_d))
+                        u_suplemento=R / area_sup / fc_d, R_suplemento=R_sup,
+                        n_M6=math.ceil(R_sup / Fv_M6) if R_sup > 0 else 0, Fv_M6=Fv_M6))
 
     for ptr in ('frente', 'fondo'):
         y0, y1 = huellas[ptr]
@@ -212,7 +224,7 @@ def apoyo_tableros(res, variante, combo='ELU-T1 1.35G+1.5Q'):
             sup = 2 if k == 'lateral aire' else 1
             if ptr == 'fondo' and k == 'lateral aire':
                 continue                       # se revisa en la esquina
-            fila(f'{ptr}: {k}', R, e * solape, sup * e * solape)
+            fila(f'{ptr}: {k}', R, e * solape, sup * e * solape, R / 2 if sup == 2 else 0.0)
         tr = Rp.get('trasero 15 mm', [])
         if ptr == 'fondo' and (tr or Rp.get('lateral aire')):
             R_la = sum(c['F'][2] for c in Rp.get('lateral aire', []))
@@ -221,7 +233,8 @@ def apoyo_tableros(res, variante, combo='ELU-T1 1.35G+1.5Q'):
             a, b = rangos['lateral aire']
             solape = min(b, y1) - max(a, y0)
             area = e * solape + e * LARGO_ESQUINA
-            fila('fondo: esquina lateral aire y trasero', R_la + R_tr_esq, area, area + e * solape)
+            fila('fondo: esquina lateral aire y trasero', R_la + R_tr_esq, area, area + e * solape,
+                 (R_la + R_tr_esq) * e * solape / (area + e * solape))
             out[-1].update(R_lateral_aire=R_la, R_trasero_esquina=R_tr_esq, R_trasero_total=R_tr_tot)
             resto = R_tr_tot - R_tr_esq
             if resto > 0:
@@ -379,7 +392,8 @@ def verificar_tornillos(res, variante, combo='ELU-T1 1.35G+1.5Q'):
         return None
     T = P.TABLERO
     kmod = T['kmod_largo']
-    Fv_d = kmod * P.CONFIRMAT['Fv_k'] / T['gamma_M']
+    M6 = P.TORNILLO_M6
+    Fv_d = kmod * P.johansen_tablero_tablero(M6['d'], M6['t'], M6['t'], M6['fu']) / T['gamma_M']
     Fax_d = kmod * P.CONFIRMAT['Fax_k'] / T['gamma_M']
     tm = r['tornillos_maleteros']
     # interaccion tornillo por tornillo, solo con la traccion (la compresion pasa por contacto entre costados)
@@ -389,26 +403,51 @@ def verificar_tornillos(res, variante, combo='ELU-T1 1.35G+1.5Q'):
                 axial_gob=tm['lista'][i][0], corte_gob=tm['lista'][i][1], u=us[i])
 
 
+def capacidad_pija():
+    """Fv,d de la pija del PTR: placa de acero delgada (pared del tubo) contra tablero de 15 mm, EN 1995 8.2.3."""
+    T, pj = P.TABLERO, P.PIJA
+    return T['kmod_largo'] * P.johansen_placa_delgada(pj['d'], pj['t'], pj['fu']) / T['gamma_M']
+
+
 def fijacion_ptr(res, variante, combo='ELU-T1 1.35G+1.5Q', s_pija=150.0):
-    """Fuerza horizontal PTR-maletero por maletero y PTR, y fuerza por pija si se reparte a cada s_pija."""
+    """Fuerza horizontal PTR-tablero por maletero o torre y PTR, y fuerza por pija si se reparte a cada s_pija."""
     r = res[variante]['combos'].get(combo)
     if not r or 'contactos_nodo' not in r:
         return None
     grupos = {}
     for c in r['contactos_nodo']:
-        if c['grupo'].startswith('maletero'):
-            grupos.setdefault((c['ptr'], c['grupo']), []).append(c)
-    T = P.TABLERO
-    Fv_d = T['kmod_largo'] * P.CONFIRMAT['Fv_k'] / T['gamma_M']
+        grupos.setdefault((c['ptr'], c['grupo']), []).append(c)
+    Fv_d = capacidad_pija()
     filas = []
     for (ptr, g), cs in sorted(grupos.items()):
         fh = [math.hypot(c['F'][0], c['F'][1]) for c in cs]
-        n_pijas = 960.0 / s_pija
+        largo = 960.0 if g.startswith('maletero') else 620.0
+        n_pijas = largo / s_pija
         filas.append(dict(ptr=ptr, grupo=g, suma=sum(fh), neto_x=abs(sum(c['F'][0] for c in cs)),
                           por_pija=max(fh) * len(cs) / n_pijas, Fv_d=Fv_d,
                           u=max(fh) * len(cs) / n_pijas / Fv_d))
     filas.sort(key=lambda f: -f['u'])
     return filas
+
+
+def envolvente(fn, res, v, **kw):
+    """fn con la rigidez instantanea y, si existe la variante, con la final; gobierna la de mayor relacion."""
+    def umax(x):
+        if not x:
+            return -1.0
+        return x['u'] if isinstance(x, dict) else max(f['u'] for f in x)
+    cands = []
+    for var, rig in ((v, 'instantánea'), (v + ' rigidez final', 'final')):
+        if var in res and 'ELU-T1 1.35G+1.5Q' in res[var]['combos']:
+            x = fn(res, var, **kw)
+            if x:
+                cands.append((umax(x), rig, x))
+    if not cands:
+        return None
+    u, rig, x = max(cands, key=lambda c: c[0])
+    if isinstance(x, dict):
+        return dict(x, rigidez=rig)
+    return [dict(f, rigidez=rig) for f in x]
 
 
 def main():
@@ -430,19 +469,35 @@ def main():
         V['flechas_ptr'][var] = {k: dict(inst=-r['ptr_flecha_rel'][k][0], L=L_PTR_EXT) for k in r['ptr']}
     V['flechas_repisas'] = {v: flechas_repisas(res, v, v + ' largo plazo') for v in completas
                             if v + ' largo plazo' in res}
-    V['apoyo_tableros'] = {v: apoyo_tableros(res, v) for v in completas}
+    V['apoyo_tableros'] = {v: envolvente(apoyo_tableros, res, v) for v in completas}
     V['uniones'] = {}
     for v in completas:
-        filas, cd = verificar_uniones(res, v)
-        V['uniones'][v] = dict(filas=filas, conector=cd)
-    V['tornillos'] = {v: verificar_tornillos(res, v) for v in completas}
-    V['fijacion'] = {v: fijacion_ptr(res, v, s_pija=75.0 if '75 mm' in v else 150.0)
+        cands = [(x, rig) for x, rig in ((v, 'instantánea'), (v + ' rigidez final', 'final'))
+                 if x in res and 'ELU-T1 1.35G+1.5Q' in res[x]['combos']]
+        mejor = None
+        for x, rig in cands:
+            filas, cd = verificar_uniones(res, x)
+            if mejor is None or max(f['u'] for f in filas) > max(f['u'] for f in mejor['filas']):
+                mejor = dict(filas=filas, conector=cd, rigidez=rig)
+        V['uniones'][v] = mejor
+    V['tornillos'] = {v: envolvente(verificar_tornillos, res, v) for v in completas}
+    V['fijacion'] = {v: envolvente(fijacion_ptr, res, v, s_pija=75.0 if '75 mm' in v else 150.0)
                      for v in hay(VARS + VARS_EXTRA + VARS_PIJAS)}
+    V['capacidades'] = dict(pija_Fv_d=capacidad_pija(),
+                            M6_Fv_d=P.TABLERO['kmod_largo'] * P.johansen_tablero_tablero(6.0, 15.0, 15.0, 400.0)
+                            / P.TABLERO['gamma_M'],
+                            pija_Kser=P.PIJA['Kser'])
     V['tableros'] = {}
     for v in completas:
         for c in ('ELU-T1 1.35G+1.5Q', 'ELU-T2 1.35G'):
-            tb, f = resumen_tableros(res, v, c)
-            V['tableros'][f'{v}|{c}'] = dict(filas=tb, f=f)
+            mejor = None
+            for x, rig in ((v, 'instantánea'), (v + ' rigidez final', 'final')):
+                if x not in res or c not in res[x]['combos']:
+                    continue
+                tb, f = resumen_tableros(res, x, c)
+                if mejor is None or tb[0]['u'] > mejor['filas'][0]['u']:
+                    mejor = dict(filas=tb, f=f, rigidez=rig)
+            V['tableros'][f'{v}|{c}'] = mejor
     V['volteo'] = volteo(res)
     V['reparto_apoyos'] = {}
     for v in hay(VARS + VARS_PERFIL + VARS_EXTRA + ('uniones rigidas',)):

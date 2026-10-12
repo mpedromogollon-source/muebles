@@ -76,6 +76,40 @@ CARGAS = dict(
 # Valores caracteristicos adoptados (verificar con datos del fabricante).
 CONFIRMAT = dict(Fv_k=1000.0, Fax_k=800.0)  # N
 
+# Pija de fijacion del PTR (tornillo autorroscante #10, d = 4.8 mm) a traves de la pared del tubo hacia un
+# tablero de 15 mm. Rigidez EN 1995-1-1 7.1: Kser = 2 rho_m^1.5 d / 23 (acero contra madera).
+PIJA = dict(d=4.8, t=15.0, fu=400.0)
+PIJA['Kser'] = 2 * TABLERO['densidad'] ** 1.5 * PIJA['d'] / 23.0
+# Tornillo pasante de union de modulos M6 (entre costados de maletero y para el suplemento de canto).
+TORNILLO_M6 = dict(d=6.0, t=15.0, fu=400.0)
+
+
+def fh_tablero(d, t):
+    """Resistencia al aplastamiento en tablero de particulas, EN 1995-1-1 ec. 8.22 (MPa)."""
+    return 65.0 * d ** -0.7 * t ** 0.1
+
+
+def johansen_placa_delgada(d, t, fu):
+    """Fv,Rk de un conector en cortante simple, placa de acero delgada contra tablero (EN 1995 8.2.3, ec. 8.9)."""
+    fh = fh_tablero(d, t)
+    My = 0.3 * fu * d ** 2.6
+    return min(0.4 * fh * t * d, 1.15 * (2 * My * fh * d) ** 0.5)
+
+
+def johansen_tablero_tablero(d, t1, t2, fu):
+    """Fv,Rk de un perno en cortante simple entre dos tableros iguales (EN 1995 8.2.2, ec. 8.6, sin efecto soga)."""
+    f1 = f2 = fh_tablero(d, min(t1, t2))
+    b = f2 / f1
+    My = 0.3 * fu * d ** 2.6
+    r = t2 / t1
+    modos = [f1 * t1 * d, f2 * t2 * d,
+             f1 * t1 * d / (1 + b) * ((b + 2 * b * b * (1 + r + r * r) + b ** 3 * r * r) ** 0.5 - b * (1 + r)),
+             1.05 * f1 * t1 * d / (2 + b) * ((2 * b * (1 + b) + 4 * b * (2 + b) * My / (f1 * d * t1 ** 2)) ** 0.5 - b),
+             1.05 * f1 * t2 * d / (1 + 2 * b) * ((2 * b * b * (1 + b) + 4 * b * (1 + 2 * b) * My / (f1 * d * t2 ** 2)) ** 0.5 - b),
+             1.15 * (2 * b / (1 + b)) ** 0.5 * (2 * My * f1 * d) ** 0.5]
+    return min(modos)
+
+
 # Rigidez de uniones entre tableros (tornillos a ~150 mm, Kser ~ 1500 N/mm c/u).
 K_UNION = 10.0       # N/mm por mm de linea de union (tornillo: corte y traccion)
 K_APOYO = 150.0      # N/mm por mm: canto de tablero apoyado en cara (compresion directa)
