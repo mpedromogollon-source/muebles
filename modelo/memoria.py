@@ -195,12 +195,12 @@ def _lam(x):
 
 
 def aceleracion(d):
-    """Pendiente final / pendiente inicial del abombamiento contra λ (tablero vertical que gobierna).
+    """Pendiente final / pendiente inicial del abombamiento de los laterales contra λ.
     Cerca de 1 el comportamiento es lineal; muy por encima de 1 la rigidez se pierde (se acerca el pandeo)."""
     c = d.get('curva') or []
     if len(c) < 3:
         return None
-    k = 'abombamiento_global' if 'abombamiento_global' in c[-1] else 'abombamiento_lateral'
+    k = 'abombamiento_lateral'
     s0 = c[0][k] / c[0]['lam']
     s1 = (c[-1][k] - c[-2][k]) / (c[-1]['lam'] - c[-2]['lam'])
     return s1 / s0 if s0 > 0 else None
@@ -371,7 +371,8 @@ def main():
         'cede porque cuelga de tornillos al tablero trasero y lo sobrecarga.',
         f'<b>Con un relleno de 15 mm (585 x 205 mm) bajo cada lateral aire, el lateral aire queda como apoyo firme</b> y '
         f'todas las revisiones de resistencia cumplen: tableros al {tb["relleno"]["u"]:.0%}, uniones al {un["relleno"]:.0%}, '
-        f'tubo al {V["ptr"][FIJ[14]["nula"]]["filas"][0]["u_H1"]:.0%} aun sin acción conjunta con los maleteros. La flecha '
+        f'tubo cal. 16 al {V["ptr"][FIJ[16]["nula"]]["filas"][0]["u_H1"]:.0%} aun sin acción conjunta con los maleteros '
+        f'({V["ptr"][FIJ[14]["nula"]]["filas"][0]["u_H1"]:.0%} en cal. 14). La flecha '
         'del tramo central depende de cuánto cortante transmitan las pijas entre el tubo y los tableros. '
         f'<b>Con tubo cal. 14 y pijas a cada 150 mm cumple</b>: L/{L_(FIJ[14]["baja"]):.0f} con una rigidez baja de la '
         f'pija, con la que todas las pijas quedan dentro de su capacidad ({fij[FIJ[14]["baja"]][0]["u"]:.0%}), y '
@@ -387,7 +388,10 @@ def main():
             f'relleno baja a {mm(abomb("relleno", False))}, todavía por encima del límite visual de 2.9 mm, y el lateral '
             f'aire pierde rigidez cerca de λ = {_caso_pandeo(V, "relleno", False)["lambda_ultimo"]:.1f} a largo plazo. Con '
             f'relleno y <b>un entrepaño fijo intermedio a 1120 mm</b> en cada torre queda en '
-            f'{mm(abomb("relleno y entrepano", False))} y el comportamiento es casi lineal hasta más de '
+            f'{mm(abomb("relleno y entrepano", False))}; el abombamiento crece de forma moderada (al final de la corrida '
+            f'su pendiente es {aceleracion(_caso_pandeo(V, "relleno y entrepano", True)):.1f} a '
+            f'{aceleracion(_caso_pandeo(V, "relleno y entrepano", False)):.1f} veces la inicial, contra 3.5 o más sin '
+            f'entrepaño) y no hay pérdida de estabilidad hasta más de '
             f'λ = {_caso_pandeo(V, "relleno y entrepano", False)["lambda_ultimo"]:.1f} a largo plazo y '
             f'{_caso_pandeo(V, "relleno y entrepano", True)["lambda_ultimo"]:.0f} a corto plazo.')
     ap_sup = max(f['u_suplemento'] for v in ('relleno', rst, e18, REC) for f in V['apoyo_tableros'].get(v, []))
@@ -548,9 +552,13 @@ def main():
             'los apoyos. La figura 3 y la tabla muestran qué elemento de la torre recibe la reacción de cada PTR. En el '
             'proyecto, el lateral aire recibe la mayor parte del frente aunque no llega al piso; la pasa por tornillos al '
             'tablero trasero y por eso cede. El PTR trasero se apoya sobre todo en el canto del tablero trasero de 15 mm, '
-            'que trabaja como muro. Con uniones diez veces más rígidas el reparto apenas cambia: el lateral aire recibe '
-            f'{rep["uniones rigidas"]["frente|torre izq"].get("lateral aire", 0) / 1e3:.2f} kN del PTR frontal en lugar '
-            f'de {rep["base"]["frente|torre izq"].get("lateral aire", 0) / 1e3:.2f} kN.')]
+            'que trabaja como muro. Con uniones diez veces más rígidas el reparto del PTR frontal apenas cambia (el lateral '
+            f'aire recibe {rep["uniones rigidas"]["frente|torre izq"].get("lateral aire", 0) / 1e3:.2f} kN en lugar de '
+            f'{rep["base"]["frente|torre izq"].get("lateral aire", 0) / 1e3:.2f} kN), pero el del trasero sí: el lateral aire '
+            f'pasa de {rep["base"]["fondo|torre izq"].get("lateral aire", 0) / 1e3:.2f} a '
+            f'{rep["uniones rigidas"]["fondo|torre izq"].get("lateral aire", 0) / 1e3:.2f} kN y el tablero trasero de '
+            f'{rep["base"]["fondo|torre izq"].get("trasero 15 mm", 0) / 1e3:.2f} a '
+            f'{rep["uniones rigidas"]["fondo|torre izq"].get("trasero 15 mm", 0) / 1e3:.2f} kN.')]
     H += fig('fig05_reparto_apoyos.png', 16.5, 'Figura 3. Reacción de cada PTR sobre los elementos de la torre izquierda (la derecha es simétrica), combinación G + Q.')
     vs = [v for v in ('base', 'relleno', 'relleno y entrepano', st) if v in rep]
     filas = [['PTR / elemento de la torre'] + [f'{ETQ[v]} (kN)' for v in vs]]
@@ -691,9 +699,11 @@ def main():
             est.append(estado(t_['u']))
     H += [tabla(filas, [6.0, 2.4, 2.4, 3.6, 1.8], est)]
     H += [p(f'Sin esos tornillos el proyecto empeora (flecha L/{fl[st]["frente"]["L_sobre_fin"]:.0f}, tablero trasero '
-            f'{f1(tb[st]["u"])}, uniones al {un[st]:.0%}). Con relleno y fijación rígida la flecha y las uniones siguen cumpliendo sin ellos '
-            f'(L/{fl[rst]["frente"]["L_sobre_fin"]:.0f}, uniones al {un[rst]:.0%}), pero el apoyo del lateral aire sube de '
-            f'{ap["relleno"]:.2f} a {ap[rst]:.3f}. Conviene colocarlos: bajan la flecha y la compresión en ese canto.')]
+            f'{f1(tb[st]["u"])}, uniones al {un[st]:.0%}). Con relleno y fijación rígida las uniones siguen cumpliendo sin ellos '
+            f'({un[rst]:.0%}), pero la flecha pasa a L/{fl[rst]["frente"]["L_sobre_fin"]:.0f}' +
+            (', por encima del límite L/300,' if not fl_ok(rst) else ',') +
+            f' y el apoyo del lateral aire sube de {ap["relleno"]:.2f} a {ap[rst]:.3f}. Por eso son necesarios: bajan la '
+            'flecha y la compresión en ese canto.')]
     # fijacion PTR-tablero
     cp = V['capacidades']
     H += [p('El contacto entre el PTR y los tableros solo transmite compresión en vertical; en horizontal el modelo base '
@@ -703,8 +713,8 @@ def main():
             'analizó el tubo cal. 16 y cal. 14 con pijas a cada 150 y 75 mm. Como sensibilidad, con una rigidez cinco veces '
             'menor (1500 N/mm, rigidez baja) la fijación cede más, la fuerza en las pijas baja y la flecha sube. Capacidad '
             f'de diseño de la pija: {cp["pija_Fv_d"]:.0f} N en cortante.')]
-    filas = [['Variante', 'Fijación', 'PTR, H1', 'Flecha largo plazo', 'Tableros', 'Uniones',
-              'Tornillos entre maleteros', 'Pija más cargada (N)', 'Pija / cap.', 'Gobierna']]
+    filas = [['Tubo', 'Fijación', 'PTR, H1', 'Flecha largo plazo', 'Tabl.', 'Unio.',
+              'Torn. entre malet.', 'Pija más cargada (N)', 'Pija / cap.', 'Gobierna']]
     est = []
     filas_fij = [('relleno y entrepano', 'rígida')]
     for cal in (16, 14):
@@ -717,16 +727,21 @@ def main():
         fj = fij.get(v_) if ('rígida' not in nom and 'sin acción' not in nom) else None
         fp_ = fl[v_]['frente']
         cal = 18 if 'cal. 18' in v_ else (14 if 'cal. 14' in v_ else 16)
-        filas.append([f'Relleno + entrepaño, cal. {cal}', nom, f1(V['ptr'][v_]['filas'][0]['u_H1']),
+        filas.append([f'cal.&nbsp;{cal}', nom, f1(V['ptr'][v_]['filas'][0]['u_H1']),
                       f'L/{fp_["L_sobre_fin"]:.0f}', f1(tb[v_]['u']), f1(un[v_]),
                       f1(tm[v_]['u']) if tm.get(v_) else '-',
                       f'{fj[0]["por_pija"]:.0f}' if fj else '-', f1(fj[0]['u']) if fj else '-'])
         rel = {'PTR': V['ptr'][v_]['filas'][0]['u_H1'], 'flecha': fp_['fin'] / fp_['lim'], 'tableros': tb[v_]['u'],
                'uniones': un[v_], 'tornillos': tm[v_]['u'] if tm.get(v_) else 0, 'pija': fj[0]['u'] if fj else 0}
         gov = max(rel, key=rel.get)
-        filas[-1].append(f'{gov} {rel[gov]:.2f}')
-        est.append(estado(rel[gov]))
-    H += [tabla(filas, [2.5, 2.3, 1.1, 1.4, 1.5, 1.4, 1.7, 1.6, 1.3, 1.7], est)]
+        if 'rígida' in nom:
+            filas[-1].append('idealización')
+            est.append('atn')
+        else:
+            filas[-1].append(f'{gov} {rel[gov]:.2f}')
+            est.append(estado(rel[gov]))
+    H += [tabla(filas, [1.3, 3.0, 1.2, 1.5, 1.1, 1.1, 1.6, 1.8, 1.4, 2.5], est)]
+    H += [p('Todas las filas llevan relleno y entrepaño. "Gobierna" indica la revisión con la relación más alta.', 'cap')]
     fr = fij['relleno y entrepano']
     k14, b14, n14 = FIJ[14]['kser'], FIJ[14]['baja'], FIJ[14]['nula']
     H += [p('Con fijación rígida, cada tramo de 150 mm de tubo tendría que transmitir hasta '
@@ -786,7 +801,7 @@ def main():
                 'corrotacional). La combinación se incrementa por un factor λ con una pequeña perturbación lateral en '
                 'el canto libre de cada lateral. Se mide el abombamiento de los laterales respecto al plano de sus '
                 'esquinas.')]
-        filas = [['Caso', 'Abomba- miento a λ = 1 (mm)', 'Pieza que gobierna', 'λ<sub>cr</sub> de Southwell (referencia)',
+        filas = [['Caso', 'Abombamiento a λ = 1 (mm)', 'Pieza que gobierna', 'λcr de Southwell (referencia)',
                   'Pendiente final / inicial', 'Factor de carga límite λ']]
         est = []
         for d in pandeo:
@@ -801,15 +816,13 @@ def main():
             est.append(estado_pandeo(d))
         H += [tabla(filas, [3.9, 2.6, 2.6, 2.4, 2.0, 3.0], est)]
         H += [p('El factor de carga límite es el intervalo entre el último paso convergido y el menor incremento que ya no '
-                'converge (antes de detenerse se reintenta con pasos de 1/4 y 1/16 y con otros algoritmos). Cada corrida '
+                'converge (antes de detenerse se reintenta con pasos de 1/4 y 1/16 del paso base de 0.5 y con otros algoritmos). Cada corrida '
                 'tiene un tope de 50 a 60 minutos de cálculo; las marcadas con ">" se detuvieron por ese tope o al llegar a '
                 'λ = 4 y el valor es una cota inferior. En el proyecto y en la variante con relleno solo, al detenerse ya avanzaban con '
-                'el paso mínimo de 1/32 y con la pendiente varias veces mayor que al inicio: están cerca de su límite. La '
-                'pendiente final / inicial compara cómo crece el abombamiento del '
-                'tablero vertical que gobierna al final y al principio de la corrida: cerca de 1 el comportamiento es lineal '
-                'y muy por encima de 1 la rigidez se está perdiendo. Con pendiente cercana a 1, una corrida que deja de '
-                'converger no muestra pandeo y se marca como detención numérica. La recta de Southwell se da solo como '
-                'referencia. Criterios: con λ de 3 o más se considera holgado, entre 1.5 y 3 al límite y por debajo de 1.5 '
+                'el paso mínimo (Δλ = 1/32) y con la pendiente varias veces mayor que al inicio: están cerca de su límite. La '
+                'pendiente final / inicial compara cómo crece el abombamiento de los '
+                'laterales al final y al principio de la corrida: cerca de 1 el comportamiento es lineal y muy por encima de 1 '
+                'la rigidez se está perdiendo. La recta de Southwell se da solo como referencia. Criterios: con λ de 3 o más se considera holgado, entre 1.5 y 3 al límite y por debajo de 1.5 '
                 'no cumple; además, el abombamiento con la carga sostenida no debe pasar de L/300 del tramo libre (2.9 mm), '
                 'para que el lateral no se vea pandeado con el tiempo.')]
         d0 = _caso_pandeo(V, 'base', True)
