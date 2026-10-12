@@ -176,14 +176,14 @@ def _lam(x):
 
 
 def texto_lambda(d, dlam=0.5):
-    """Intervalo del factor limite. pandeo.barrido reintenta con dlam/4 antes de detenerse, asi que la
-    perdida de convergencia queda entre el ultimo paso convergido y ese subpaso."""
+    """Intervalo del factor limite: entre el ultimo paso convergido y el menor subpaso que
+    pandeo.barrido intento sin converger (paso_falla)."""
     lu = d['lambda_ultimo']
     if d.get('parcial'):
         return f'> {_lam(lu)} (en curso)'
     if d['convergio_hasta_max'] or d.get('nota'):
         return f'> {_lam(lu)}'
-    return f'{_lam(lu)} a {_lam(lu + dlam / 4)}'
+    return f'{_lam(lu)} a {_lam(lu + d.get("paso_falla", dlam / 4))}'
 
 
 def abombamiento(V, var, corto, lam_obj=1.0):
@@ -641,11 +641,21 @@ def main():
             u_ab = (ab1 / 2.9) if (ab1 is not None and 'largo' in d['variante']) else 0.0
             est.append('mal' if (lu < 1.5 or u_ab > 1.0) else ('atn' if lu < 3.0 else 'ok'))
         H += [tabla(filas, [4.6, 2.8, 3.4, 3.0, 3.7], est)]
-        H += [p('El factor de carga límite es el intervalo entre el último paso convergido y el primer incremento que ya no '
-                'converge (se reintenta con un cuarto del paso antes de detenerse); en los casos '
+        H += [p('El factor de carga límite es el intervalo entre el último paso convergido y el menor incremento que ya no '
+                'converge (antes de detenerse se reintenta con pasos de 1/4 y 1/16 y con otros algoritmos); en los casos '
                 'marcados con ">" la corrida terminó sin pérdida de estabilidad. La recta de Southwell se da solo como '
-                'referencia. Criterios: λ mayor que 3, y abombamiento con la carga sostenida no mayor que L/300 del tramo '
-                'libre (2.9 mm), para que el lateral no se vea pandeado con el tiempo.')]
+                'referencia. Criterios: con λ de 3 o más se considera holgado, entre 1.5 y 3 al límite y por debajo de 1.5 '
+                'no cumple; además, el abombamiento con la carga sostenida no debe pasar de L/300 del tramo libre (2.9 mm), '
+                'para que el lateral no se vea pandeado con el tiempo.')]
+        d0 = _caso_pandeo(V, 'base', True)
+        lat0 = next((f['u'] for f in V['tableros']['base|ELU-T1 1.35G+1.5Q']['filas']
+                     if f['tablero'].startswith('ESPCL-LD')), None)
+        if d0 and d0['curva'] and lat0 is not None:
+            H += [p(f'En el proyecto la corrida a corto plazo llega a λ = {_lam(d0["lambda_ultimo"])}, pero eso no indica una '
+                    f'reserva real: el lateral exterior ya se abomba {mm(abomb("base", True))} a λ = 1 y '
+                    f'{d0["curva"][-1]["abombamiento_lateral"]:.0f} mm al final de la corrida. No hay un pandeo súbito sino '
+                    'una flexión fuera del plano que crece con la carga, y el tablero se agota antes por resistencia (índice '
+                    f'{f1(lat0)} del lateral exterior en el análisis lineal, sección 6.4) y por la deformación diferida.')]
         H += fig('fig06_pandeo.png', 16.0, 'Figura 7. Factor de carga contra abombamiento máximo de laterales.')
         H += fig('fig07_modo_pandeo.png', 9.5, 'Figura 8. Abombamiento del lateral exterior izquierdo en el último paso '
                  'convergido del proyecto a corto plazo: se concentra en el canto frontal libre.')

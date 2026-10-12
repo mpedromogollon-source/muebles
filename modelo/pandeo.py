@@ -1,7 +1,8 @@
 """Estabilidad de las torres: analisis con no linealidad geometrica.
 
 Se usan cascarones ASDShellQ4 corrotacionales y PTR corrotacional. La combinacion de diseno se
-incrementa por un factor lambda hasta perder convergencia o hasta lambda_max, con
+incrementa por un factor lambda hasta perder convergencia (tras reintentar con pasos
+de 1/4 y 1/16 y con otros algoritmos) o hasta lambda_max, con
 una pequena perturbacion lateral (0.5 % de la carga vertical que baja por cada
 lateral) para disparar el modo de pandeo fuera del plano.
 
@@ -72,24 +73,26 @@ def barrido(nombre, kw, combo, lam_max=4.0, dlam=0.5, parcial=None):
         if time.time() - t0 > T_MAX_CASO:
             nota = 'detenido por tiempo de calculo sin perdida de estabilidad'
             break
-        ok = ops.analyze(1)
-        if ok != 0:
-            ops.integrator('LoadControl', dlam / 4)
-            ok = ops.analyze(1)
-            if ok != 0:
+        for div, alg, iters in INTENTOS:
+            ops.integrator('LoadControl', dlam / div)
+            ops.algorithm(alg)
+            ops.test('NormDispIncr', 1e-5, iters)
+            if ops.analyze(1) == 0:
+                lam += dlam / div
                 break
-            lam += dlam / 4
-            ops.integrator('LoadControl', dlam)
         else:
-            lam += dlam
+            break
         ab = max((abombamiento(t, 0) + (t.nombre, t.grupo) for t in laterales), key=lambda r: r[0])
+        abg = max((abombamiento(t, t.a) + (t.nombre, t.grupo) for t in m.tableros if t.a != 2), key=lambda r: r[0])
         abt = max(abombamiento(t, 1)[0] for t in traseros)
         uy = max(abs(ops.nodeDisp(n)[1]) for n in techos)
         uz = min(ops.nodeDisp(n)[2] for n in m.ptr_nodos['frente'])
         curva.append(dict(lam=round(lam, 3), abombamiento_lateral=ab[0], donde=ab[1].round(0).tolist(),
-                          pieza=f'{ab[2]} ({ab[3]})', abombamiento_trasero=abt, desplome=uy, flecha_ptr=uz))
+                          pieza=f'{ab[2]} ({ab[3]})', abombamiento_trasero=abt, desplome=uy, flecha_ptr=uz,
+                          abombamiento_global=abg[0], pieza_global=f'{abg[2]} ({abg[3]})'))
         print(f'  {nombre}: lambda={lam:.2f}  abombamiento lateral={ab[0]:.2f} mm en {ab[2]} {ab[1].round(0)}  '
-              f'trasero={abt:.2f}  desplome={uy:.2f}  flecha PTR={uz:.2f} mm', flush=True)
+              f'trasero={abt:.2f}  desplome={uy:.2f}  flecha PTR={uz:.2f} mm  global={abg[0]:.2f} en {abg[2]} ({abg[3]})',
+              flush=True)
         if parcial:
             with open(parcial, 'w') as f:
                 json.dump(dict(variante=nombre, combo=combo, curva=curva, lambda_ultimo=lam,
@@ -97,7 +100,7 @@ def barrido(nombre, kw, combo, lam_max=4.0, dlam=0.5, parcial=None):
     campo = {t.nombre + '|' + t.grupo: dict(xyz=[m.coord[n].tolist() for n in t.nodos.values()],
                                             u=[ops.nodeDisp(n)[:3] for n in t.nodos.values()])
              for t in m.tableros if t.grupo.startswith('torre')}
-    out = dict(variante=nombre, combo=combo, curva=curva, lambda_ultimo=lam,
+    out = dict(variante=nombre, combo=combo, curva=curva, lambda_ultimo=lam, paso_falla=dlam / INTENTOS[-1][0],
                convergio_hasta_max=lam >= lam_max - 1e-9, campo_final=campo)
     if nota:
         out['nota'] = nota
@@ -105,6 +108,9 @@ def barrido(nombre, kw, combo, lam_max=4.0, dlam=0.5, parcial=None):
 
 
 T_MAX_CASO = 50 * 60      # s por caso; si se alcanza sin divergencia se reporta como cota inferior
+# Antes de declarar perdida de convergencia se reintenta el incremento con pasos menores y otros
+# algoritmos, para no confundir una dificultad numerica con un limite de estabilidad.
+INTENTOS = [(1, 'Newton', 40), (4, 'Newton', 40), (16, 'NewtonLineSearch', 100), (16, 'KrylovNewton', 100)]
 T = P.TABLERO
 LP = dict(E_tablero=T['E'] / (1 + T['kdef']), k_union=P.K_UNION / (1 + T['kdef']))
 CASOS = [
