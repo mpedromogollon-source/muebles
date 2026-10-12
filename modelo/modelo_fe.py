@@ -162,11 +162,17 @@ def malla_global(tableros, extras_y=(), h=P.H_MALLA):
     return G
 
 
+K_TORNILLO = 1500.0   # N/mm, tornillo de union entre costados de maleteros contiguos
+
+
 class Modelo:
     def __init__(self, perfil=P.PERFIL_BASE, con_relleno=False, E_tablero=P.TABLERO['E'],
                  k_union=P.K_UNION, anclajes_muro=False, unilateral=True, no_lineal_geom=False,
-                 con_entrepano=False, tornillos_maleteros=True):
+                 con_entrepano=False, tornillos_maleteros=True, k_fijacion=None):
         self.perfil = perfil
+        # rigidez horizontal PTR-tablero: None = fijacion rigida (K_CONTACTO por nodo); un valor en N/mm por mm
+        # reparte esa rigidez lineal (pijas) entre los nodos de contacto de cada maletero o torre
+        self.k_fijacion = k_fijacion
         self.B, t = P.perfil_diseno(perfil)
         self.ptr = ptr_cuadrado(self.B, t)
         self.y_ptr = P.huellas_ptr(self.B)
@@ -285,9 +291,8 @@ class Modelo:
         """
         self.uniones_cara = []
         k_nodo = self.k_union * P.H_MALLA * 0.8
-        k_tornillo = 1500.0
         m_n = self._nuevo_material(k_nodo)
-        m_t = self._nuevo_material(k_tornillo)
+        m_t = self._nuevo_material(K_TORNILLO)
         for i, p in enumerate(self.tableros):
             for j, q in enumerate(self.tableros):
                 if j <= i or p.a != q.a or abs(abs(p.c - q.c) - P.TABLERO['espesor']) > 0.6:
@@ -379,6 +384,7 @@ class Modelo:
             mz = mk
         z_torre = self._nivel_contacto('torre')
         z_mal = self._nivel_contacto('maletero')
+        defs = []
         for nombre, (y0, y1) in self.y_ptr.items():
             yc = 0.5 * (y0 + y1)
             ya_unidos = set()
@@ -410,9 +416,20 @@ class Modelo:
                 ops.rigidLink('beam', master, aux)
                 # orden de nodos tal que la compresion sea deformacion negativa
                 i_, j_ = (aux, n) if t.grupo.startswith('maletero') else (n, aux)
-                ops.element('zeroLength', self.etag_libre, i_, j_, '-mat', mk, mk, mz, '-dir', 1, 2, 3)
-                self.contactos.append((self.etag_libre, n, self.nodo_tablero[n], nombre, xyz[0]))
-                self.etag_libre += 1
+                defs.append((i_, j_, n, nombre, xyz[0], t.grupo))
+        if self.k_fijacion is not None:
+            grupos = defaultdict(list)
+            for d in defs:
+                grupos[(d[3], d[5])].append(d)
+            mat_h = {}
+            for (nombre, grupo), ds in grupos.items():
+                largo = 960.0 if grupo.startswith('maletero') else 620.0
+                mat_h[(nombre, grupo)] = self._nuevo_material(self.k_fijacion * largo / len(ds))
+        for i_, j_, n, nombre, x, grupo in defs:
+            mh = mk if self.k_fijacion is None else mat_h[(nombre, grupo)]
+            ops.element('zeroLength', self.etag_libre, i_, j_, '-mat', mh, mh, mz, '-dir', 1, 2, 3)
+            self.contactos.append((self.etag_libre, n, self.nodo_tablero[n], nombre, x))
+            self.etag_libre += 1
 
     def _nivel_contacto(self, tipo):
         if tipo == 'torre':
@@ -452,7 +469,8 @@ class Modelo:
             for e, it in self.elem_tablero.items():
                 for n in ops.eleNodes(e):
                     F[n][2] -= w * self.elem_area[e] / 4
-            wp = self.ptr['A'] * P.ACERO['densidad'] * 1e-9 * P.GRAV
+            # el peso usa el espesor nominal; el de diseno (0.93 t) es solo para resistencia y rigidez
+            wp = ptr_cuadrado(self.B, P.PERFILES[self.perfil][1])['A'] * P.ACERO['densidad'] * 1e-9 * P.GRAV
             for nombre, nod in self.ptr_nodos.items():
                 xs = self.ptr_x
                 for i, n in enumerate(nod):
@@ -481,7 +499,8 @@ class Modelo:
         elif caso == 'H_sismo':
             # fuerza horizontal c * (G + psi2 Q) hacia el frente (-y), aplicada donde esta la masa
             psi2 = P.TABLERO['psi2_almacen']
-            for k, v in self.cargas_combinadas({'G': 1.0, 'Q_maleteros': psi2, 'Q_torres': psi2}).items():
+            for k, v in self.cargas_combinadas({'G': 1.0, 'Q_maleteros': psi2, 'Q_torres': psi2,
+                                                 'Q_barra': psi2}).items():
                 F[k][1] += C['c_sismico'] * v[2]
         return F
 
@@ -588,8 +607,9 @@ class Modelo:
         R['desp'] = {n: np.array(ops.nodeDisp(n)[:3]) for n in self.coord}
         R['uniones'] = [(e, np.array(ops.eleResponse(e, 'force')[:3])) for e, *_ in self.uniones]
         R['contactos'] = [(e, np.array(ops.eleResponse(e, 'force')[:3])) for e, *_ in self.contactos]
-        # fuerza global en el nodo i; los costados son normales a x, por eso x es el axial del tornillo
-        R['tornillos_maleteros'] = [np.array(ops.eleResponse(e, 'force')[:3])
+        # deformacion basica del enlace (eje local x de i a j, normal a los costados) por la rigidez del tornillo:
+        # componente 0 positiva = traccion; 1 y 2 = cortantes
+        R['tornillos_maleteros'] = [K_TORNILLO * np.array(ops.eleResponse(e, 'deformation')[:3])
                                     for e, n0, n1, i, j in self.uniones_cara
                                     if self.tableros[i].grupo != self.tableros[j].grupo]
         R['ptr'] = {}

@@ -75,10 +75,12 @@ def fig_modelo(campo):
         xyz = np.array(d['xyz'])
         ax.plot(xyz[:, 0], xyz[:, 1], xyz[:, 2], color=S2, lw=3.2, solid_capstyle='butt')
     _ejes_3d(ax, [(4750, 7730), (-150, 550), (0, 2560)])
-    ax.text(6240, -160, 1500, f'{ETQ_PTR} frontal', color=TXT, fontsize=8, ha='center')
-    ax.text(4800, 500, 2650, 'maleteros (3 x 960 mm)', color=TXT2, fontsize=8)
-    ax.text(4700, -150, 300, 'torre izq.', color=TXT2, fontsize=8)
-    ax.text(7500, -150, 300, 'torre der.', color=TXT2, fontsize=8)
+    caja = dict(facecolor='white', edgecolor='none', alpha=0.85, pad=1.5)
+    ax.text2D(0.55, 0.40, f'{ETQ_PTR} frontal (naranja)', transform=ax.transAxes, color=TXT, fontsize=8,
+              ha='center', bbox=caja)
+    ax.text(4800, 500, 2650, 'maleteros (3 x 960 mm)', color=TXT, fontsize=8, bbox=caja)
+    ax.text(4700, -150, -150, 'torre izq.', color=TXT, fontsize=8, bbox=caja)
+    ax.text(7500, -150, -150, 'torre der.', color=TXT, fontsize=8, bbox=caja)
     ax.set_title('Modelo de elementos finitos: 57 tableros (cascarones) y 2 PTR (vigas)', loc='left')
     return guardar(fig, 'fig01_modelo_3d.png')
 
@@ -110,7 +112,7 @@ def fig_deformada(campo, escala=40.0, titulo='', nombre='fig02_deformada.png'):
 
 def fig_ptr(res):
     fig, axs = plt.subplots(3, 2, figsize=(9.5, 7.6), sharex=True)
-    var = [('base', 'proyecto (lateral aire sin apoyo)', S1), ('relleno', 'con relleno bajo lateral aire', S2)]
+    var = [('base', 'proyecto (lateral aire sin apoyo directo al piso)', S1), ('relleno', 'con relleno bajo el lateral aire', S2)]
     for j, ptr in enumerate(('frente', 'fondo')):
         for v, etq, col in var:
             r = res[v]['combos']['ELU-A1 1.2G+1.6Q']['ptr'][ptr]
@@ -128,16 +130,18 @@ def fig_ptr(res):
     axs[0, 0].set_ylabel('momento Mu (kN·m)\n1.2G + 1.6Q')
     axs[1, 0].set_ylabel('cortante Vu (kN)\n1.2G + 1.6Q')
     axs[2, 0].set_ylabel('desplazamiento vertical (mm)\nG + Q')
-    axs[0, 0].legend(loc='upper right', fontsize=8)
+    h, l_ = axs[0, 0].get_legend_handles_labels()
+    fig.legend(h, l_, loc='lower center', ncol=2, fontsize=8, frameon=False, bbox_to_anchor=(0.5, 0.025))
     fig.text(0.01, 0.005, 'Líneas verticales: laterales exterior y aire de cada torre.', color=TXT2, fontsize=8)
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0.05, 1, 1))
     return guardar(fig, 'fig04_ptr_diagramas.png')
 
 
 def fig_reparto(res):
-    elems = ['lateral exterior', 'lateral aire', 'trasero 15 mm', 'travesano superior']
-    var = [('base', 'proyecto'), ('uniones rigidas', 'uniones 10 veces más rígidas'), ('relleno', 'con relleno')]
-    fig, axs = plt.subplots(1, 2, figsize=(9.5, 3.4), sharey=True)
+    elems = ['lateral exterior', 'lateral aire', 'trasero 15 mm']
+    var = [('base', 'proyecto'), ('sin tornillos entre maleteros', 'proyecto sin tornillos entre maleteros'),
+           ('relleno', 'con relleno')]
+    fig, axs = plt.subplots(1, 2, figsize=(9.5, 3.7), sharey=True)
     for j, ptr in enumerate(('frente', 'fondo')):
         w = 0.26
         for i, (v, etq) in enumerate(var):
@@ -146,12 +150,13 @@ def fig_reparto(res):
             xs = np.arange(len(elems)) + (i - 1) * (w + 0.02)
             axs[j].bar(xs, vals, width=w, color=[S1, S3, S2][i], label=etq)
         axs[j].set_xticks(np.arange(len(elems)))
-        axs[j].set_xticklabels([e.replace('travesano', 'travesaño') for e in elems], fontsize=8)
+        axs[j].set_xticklabels(elems, fontsize=8)
         axs[j].set_title(f'PTR {ptr}: reacción en la torre izquierda (G + Q)', loc='left')
         axs[j].grid(axis='x', visible=False)
     axs[0].set_ylabel('reacción (kN)')
-    axs[1].legend(loc='upper right', fontsize=8)
-    fig.tight_layout()
+    h, l_ = axs[0].get_legend_handles_labels()
+    fig.legend(h, l_, loc='lower center', ncol=3, fontsize=8, frameon=False)
+    fig.tight_layout(rect=(0, 0.08, 1, 1))
     return guardar(fig, 'fig05_reparto_apoyos.png')
 
 
@@ -218,6 +223,9 @@ def southwell(curva):
     return 1.0 / pend if pend > 0 else None
 
 
+X_MAX_PANDEO = 12.0
+
+
 def fig_pandeo(pandeo):
     fig, axs = plt.subplots(1, 2, figsize=(9.5, 3.6), sharey=True)
     cols = {'proyecto': S1, 'con relleno': S2, 'relleno y entrepaño': S3}
@@ -227,15 +235,20 @@ def fig_pandeo(pandeo):
         c = d['curva']
         x = [0.0] + [k['abombamiento_lateral'] for k in c]
         y = [0.0] + [k['lam'] for k in c]
-        ax.plot(x, y, color=cols[var], marker='o', ms=3.5, label=var)
-        if not d['convergio_hasta_max']:
-            txt = 'corrida detenida' if d.get('nota') else 'sin convergencia\na mayor λ'
+        ax.plot(x, y, color=cols[var], marker='o', ms=3.5, label=var, clip_on=True)
+        if x[-1] > X_MAX_PANDEO:
+            yi = float(np.interp(X_MAX_PANDEO, x, y))
+            ax.annotate(f'{var}: sigue hasta\n{x[-1]:.0f} mm con λ = {y[-1]:.2f}', (X_MAX_PANDEO, yi),
+                        textcoords='offset points', xytext=(-95, 6), fontsize=7, color=TXT2)
+        elif not d['convergio_hasta_max']:
+            txt = 'detenida por tiempo' if d.get('nota') else 'sin convergencia\na mayor λ'
             ax.annotate(txt, (x[-1], y[-1]), textcoords='offset points', xytext=(5, -4), fontsize=7, color=TXT2)
     for ax, t in zip(axs, ('Corto plazo: 1.35G + 1.5Q, E/γM', 'Largo plazo: G + 0.8Q, E/(1 + kdef)')):
         ax.axhline(1.0, color=TXT2, lw=0.8)
+        ax.axvline(2.9, color=TXT2, lw=0.6, ls='--')
         ax.set_title(t, loc='left')
         ax.set_xlabel('abombamiento máximo de laterales (mm)')
-        ax.set_xlim(left=0)
+        ax.set_xlim(0, X_MAX_PANDEO)
     axs[0].set_ylabel('factor de carga λ')
     axs[0].legend(fontsize=8, loc='lower right')
     fig.tight_layout()

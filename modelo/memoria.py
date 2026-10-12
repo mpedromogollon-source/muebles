@@ -41,8 +41,8 @@ MAL = colors.HexColor('#fde8e4')
 ATN = colors.HexColor('#fdf3dc')
 
 E = {
-    'h1': ParagraphStyle('h1', fontName='DVB', fontSize=14, leading=18, spaceBefore=14, spaceAfter=6, textColor=TINTA),
-    'h2': ParagraphStyle('h2', fontName='DVB', fontSize=11, leading=14, spaceBefore=10, spaceAfter=4, textColor=TINTA),
+    'h1': ParagraphStyle('h1', fontName='DVB', fontSize=14, leading=18, spaceBefore=14, spaceAfter=6, textColor=TINTA, keepWithNext=1),
+    'h2': ParagraphStyle('h2', fontName='DVB', fontSize=11, leading=14, spaceBefore=10, spaceAfter=4, textColor=TINTA, keepWithNext=1),
     'p': ParagraphStyle('p', fontName='DV', fontSize=9, leading=12.5, alignment=TA_JUSTIFY, spaceAfter=5,
                         textColor=TINTA),
     'li': ParagraphStyle('li', fontName='DV', fontSize=9, leading=12.5, leftIndent=12, bulletIndent=2,
@@ -138,9 +138,15 @@ def pie_pagina(canvas, doc):
     canvas.restoreState()
 
 
+REC = 'relleno y entrepano cal. 14 pijas'      # solucion recomendada con fijacion realista
 VARIANTES = (('base', 'Proyecto'), ('relleno', 'Con relleno'), ('relleno y entrepano', 'Relleno + entrepaño'),
-             ('relleno y entrepano cal. 18', 'Relleno + entrepaño, cal. 18'))
+             (REC, 'Recomendada: relleno + entrepaño, cal. 14, pijas'))
 ETQ = dict(VARIANTES)
+ETQ.update({'relleno y entrepano cal. 18': 'Relleno + entrepaño, cal. 18',
+            'relleno y entrepano pijas': 'Relleno + entrepaño, cal. 16, pijas a 150 mm',
+            'relleno y entrepano pijas a 75 mm': 'Relleno + entrepaño, cal. 16, pijas a 75 mm',
+            'relleno y entrepano cal. 18 pijas': 'Relleno + entrepaño, cal. 18, pijas a 150 mm',
+            REC: 'Relleno + entrepaño, cal. 14, pijas a 150 mm'})
 ETQ.update({'30x30 cal. 18': 'Proyecto, cal. 18', '30x30 cal. 14': 'Proyecto, cal. 14',
             'PTR 3x3 pulg': 'Proyecto, PTR de 3" x 3" (76.2 mm), comparación', 'sin tornillos entre maleteros': 'Proyecto sin tornillos entre maleteros',
             'relleno sin tornillos entre maleteros': 'Con relleno, sin tornillos entre maleteros',
@@ -156,6 +162,8 @@ def _var_pandeo(n):
 
 
 def _caso_pandeo(V, var, corto):
+    if var == REC:
+        var = 'relleno y entrepano'     # la estabilidad de la solucion recomendada se toma de esta variante
     for d in V.get('pandeo') or []:
         if _var_pandeo(d['variante']) == var and ('ELU' in d['variante']) == corto:
             return d
@@ -175,6 +183,18 @@ def _lam(x):
     return s + '0' if s.endswith('.') else s
 
 
+def aceleracion(d):
+    """Pendiente final / pendiente inicial del abombamiento contra λ (tablero vertical que gobierna).
+    Cerca de 1 el comportamiento es lineal; muy por encima de 1 la rigidez se pierde (se acerca el pandeo)."""
+    c = d.get('curva') or []
+    if len(c) < 3:
+        return None
+    k = 'abombamiento_global' if 'abombamiento_global' in c[-1] else 'abombamiento_lateral'
+    s0 = c[0][k] / c[0]['lam']
+    s1 = (c[-1][k] - c[-2][k]) / (c[-1]['lam'] - c[-2]['lam'])
+    return s1 / s0 if s0 > 0 else None
+
+
 def texto_lambda(d, dlam=0.5):
     """Intervalo del factor limite: entre el ultimo paso convergido y el menor subpaso que
     pandeo.barrido intento sin converger (paso_falla)."""
@@ -183,6 +203,9 @@ def texto_lambda(d, dlam=0.5):
         return f'> {_lam(lu)} (en curso)'
     if d['convergio_hasta_max'] or d.get('nota'):
         return f'> {_lam(lu)}'
+    a = aceleracion(d)
+    if a is not None and a < 1.6:
+        return f'> {_lam(lu)} (detención numérica)'
     return f'{_lam(lu)} a {_lam(lu + d.get("paso_falla", dlam / 4))}'
 
 
@@ -209,10 +232,12 @@ def tabla_resumen(V):
     uvr = {v: max(pf[v]['u_V'], pf[v]['u_R']) for v in vs}
     fila('PTR: cortante y paredes', [f1(uvr[v]) for v in vs], '≤ 1.0', [uvr[v] for v in vs])
     fp = {v: V['flechas_ptr'][v]['frente'] for v in vs}
-    fila('PTR frontal: flecha a largo plazo', [f'L/{fp[v]["L_sobre_fin"]:.0f}' for v in vs], '≤ L/300',
+    fila('PTR frontal: flecha a largo plazo, tramo que gobierna', [f'L/{fp[v]["L_sobre_fin"]:.0f}' for v in vs], '≤ L/300',
          [fp[v]['fin'] / fp[v]['lim'] for v in vs])
     ap = {v: max(f['u'] for f in V['apoyo_tableros'][v]) for v in vs}
     fila('Apoyo del PTR en canto de 15 mm σ/f<sub>c,d</sub>', [f1(ap[v]) for v in vs], '≤ 1.0', [ap[v] for v in vs])
+    aps = {v: max(f['u_suplemento'] for f in V['apoyo_tableros'][v]) for v in vs}
+    fila('Apoyo con suplemento de canto en el lateral aire', [f1(aps[v]) for v in vs], '≤ 1.0', [aps[v] for v in vs])
     tb = {v: V['tableros'][f'{v}|ELU-T1 1.35G+1.5Q']['filas'][0]['u'] for v in vs}
     fila('Tableros: índice de esfuerzo máximo', [f1(tb[v]) for v in vs], '≤ 1.0', [tb[v] for v in vs])
     un = {v: max(f['u'] for f in V['uniones'][v]['filas']) for v in vs}
@@ -229,9 +254,9 @@ def tabla_resumen(V):
         fila('Abombamiento de laterales con carga sostenida', [f'{x:.1f} mm' if x else '-' for x in vals],
              '≤ 870/300 = 2.9 mm', [x / 2.9 if x else None for x in vals])
     d = V['desplome']
-    fila('Desplome superior de maleteros (G + Q, sin anclaje)',
-         [f'{d[v]["uy_max"]:.1f} mm' if v in d else '-' for v in vs], '< 5 mm',
-         [d[v]['uy_max'] / 5 if v in d else None for v in vs])
+    fila('Desplome superior de maleteros a largo plazo, sin anclaje',
+         [f'{d[v]["uy_fin"]:.1f} mm' if v in d else '-' for v in vs], '< 5 mm (se resuelve con el anclaje)',
+         [d[v]['uy_fin'] / 5 if v in d else None for v in vs], lim=99.0, atn=1.0)
     rp = {v: max(f['u'] for f in V['flechas_repisas'][v]) for v in vs}
     fila('Repisas: flecha diferida / (L/200)', [f1(rp[v]) for v in vs], '≤ 1.0', [rp[v] for v in vs])
     fila('Volteo sin anclaje: aceleración que lo inicia', [f'{V["volteo"]["c_limite"]:.2f} g'] * len(vs),
@@ -269,7 +294,11 @@ def main():
     gauges = [v for v in ('30x30 cal. 18', 'base', '30x30 cal. 14') if v in fl]
     Lmin = min(fl[v]['frente']['L_sobre_fin'] for v in gauges)
     Lmax = max(fl[v]['frente']['L_sobre_fin'] for v in gauges)
-    s_rec = int(min(f['s_local'] for f in V['uniones']['base']['filas'] if f['u'] > 0.7) // 10 * 10)
+    s_rec = int(min(f['s_local'] for f in V['uniones']['base']['filas']
+                    if f['u'] > 1.0 and 'fondo 15mm' in f['union']) // 10 * 10)
+    mA, mS = mn['ELU-A1 1.2G+1.6Q'], mn['ELS G+Q']
+    fij = V.get('fijacion', {})
+    vac = vol['casos']['vacio']
     st = 'sin tornillos entre maleteros'
     rst = 'relleno sin tornillos entre maleteros'
     e18 = 'relleno y entrepano cal. 18'
@@ -289,30 +318,35 @@ def main():
             f' Fecha del cálculo: {hoy}. Revisión 2: el PTR es de {B:.0f} x {B:.0f} mm (3 x 3 cm); esta revisión '
             'sustituye a la anterior, que suponía un PTR de 3" x 3".', 'p'), Spacer(1, 0.3 * cm)]
     H += [p('Resumen ejecutivo', 'h2')]
+    fbase = fl['base']['frente']
     items = [
-        f'<b>El {NOM_PTR} no puede cargar los maleteros como viga.</b> Si trabajara solo entre las torres '
-        f'(viga simple de 2865 mm) necesitaría {mn["ELU-A1 1.2G+1.6Q"]["M_manual"] / 1e6:.2f} kN·m, '
-        f'{mn["ELU-A1 1.2G+1.6Q"]["M_manual"] / cap["phiMn"]:.1f} veces su resistencia de {cap["phiMn"] / 1e6:.2f} kN·m, '
-        f'y su flecha sería del orden de {mn["ELS G+Q"]["flecha_manual"]:.0f} mm. En el modelo trabaja de otro modo: los '
-        'tres maleteros, atornillados entre sí, forman una caja de 870 mm de peralte que se apoya en las torres, y el '
-        f'tubo se deforma con ellos. Por eso su momento es solo {fa1["Mu"] / 1e6:.2f} kN·m ({fa1["u_M"]:.0%}); lo que '
-        'falla es la rigidez del conjunto y las torres que lo reciben.',
-        f'<b>El proyecto tal cual no cumple.</b> Flecha del PTR frontal {f1(fl["base"]["frente"]["inst"], 1)} mm '
-        f'instantánea y {f1(fl["base"]["frente"]["fin"], 1)} mm a largo plazo (L/{fl["base"]["frente"]["L_sobre_fin"]:.0f}, '
-        f'límite L/300); tablero trasero de la torre con índice {f1(tb["base"]["u"])}; uniones al {un["base"]:.0%} de su '
-        f'capacidad; tornillos entre maleteros al {tm["base"]["u"]:.0%}; desplome de {f1(des["base"]["uy_max"], 1)} mm; '
-        f'y el lateral exterior se abomba {mm(abomb("base", False), 0)} con la carga sostenida. Cambiar el calibre del tubo '
-        f'(18, 16 o 14) no lo resuelve: la flecha queda entre L/{Lmin:.0f} y L/{Lmax:.0f}.',
-        'La causa de fondo es la misma de la revisión anterior: el lateral interior de cada torre ("lateral aire", '
-        '900 mm) no llega al piso; entre la cubierta de cajones y su canto inferior hay un hueco abierto de 205 mm. Con '
-        f'un tubo tan flexible ese lateral recibe la mayor parte de la carga del frente ({rep["base"]["frente|torre izq"].get("lateral aire", 0) / 1e3:.2f} kN '
-        f'en servicio, contra {rep["base"]["frente|torre izq"].get("lateral exterior", 0) / 1e3:.2f} kN del lateral exterior) '
-        'y la entrega por tornillos al tablero trasero, que se sobrecarga.',
-        f'<b>Con un relleno de 15 mm (585 x 205 mm) bajo cada lateral aire el sistema cumple en resistencia y flecha</b>: '
-        f'L/{fl["relleno"]["frente"]["L_sobre_fin"]:.0f} a largo plazo, tableros con índice {f1(tb["relleno"]["u"])} y '
-        f'uniones al {un["relleno"]:.0%}. La flecha sigue cumpliendo sin tornillos entre maleteros '
-        f'(L/{fl[rst]["frente"]["L_sobre_fin"]:.0f}) y con tubo cal. 18 más el entrepaño '
-        f'(L/{fl[e18]["frente"]["L_sobre_fin"]:.0f}).',
+        f'<b>El {NOM_PTR} trabaja como viga continua sobre los cuatro laterales de las torres</b> (los exteriores y '
+        f'los laterales aire). Con apoyos firmes necesitaría {mA["M_continua"] / 1e6:.2f} kN·m, el '
+        f'{mA["M_continua"] / cap["phiMn"]:.0%} de su resistencia de {cap["phiMn"] / 1e6:.2f} kN·m, y su flecha de servicio '
+        f'sería de unos {mS["flecha_continua"]:.0f} mm en el tramo central: la sección alcanza si los apoyos no ceden. Si '
+        f'el lateral aire no lo apoyara, como viga simple de 2865 mm necesitaría {mA["M_manual"] / 1e6:.2f} kN·m '
+        f'({mA["M_manual"] / cap["phiMn"]:.1f} veces su resistencia). En el modelo, con la rigidez {fa1["rigidez"]} de la melamina, el '
+        f'momento máximo del proyecto es {fa1["Mu"] / 1e6:.2f} kN·m ({fa1["u_M"]:.0%}).',
+        f'<b>El proyecto tal cual no cumple.</b> Flecha del PTR frontal {f1(fbase["inst"], 1)} mm instantánea y '
+        f'{f1(fbase["fin"], 1)} mm a largo plazo (L/{fbase["L_sobre_fin"]:.0f} en el tramo {fbase["tramo"]}, límite L/300); '
+        f'tablero trasero de la torre con índice {f1(tb["base"]["u"])}; uniones al {un["base"]:.0%} de su capacidad; '
+        f'tornillos entre maleteros al {tm["base"]["u"]:.0%}; desplome de {f1(des["base"]["uy_max"], 1)} mm; y el lateral '
+        f'exterior se abomba {mm(abomb("base", False), 0)} con la carga sostenida. Cambiar el calibre del tubo (18, 16 o '
+        f'14) no lo resuelve: la flecha queda entre L/{Lmin:.0f} y L/{Lmax:.0f}.',
+        'La causa es el apoyo, no el tubo: el lateral interior de cada torre ("lateral aire", 900 mm) no llega al piso; '
+        'entre la cubierta de cajones y su canto inferior hay un hueco abierto de 205 mm. Ese lateral recibe la mayor '
+        f'parte de la carga del PTR frontal ({rep["base"]["frente|torre izq"].get("lateral aire", 0) / 1e3:.2f} kN en '
+        f'servicio, contra {rep["base"]["frente|torre izq"].get("lateral exterior", 0) / 1e3:.2f} kN del lateral exterior), '
+        'cede porque cuelga de tornillos al tablero trasero y lo sobrecarga.',
+        f'<b>Con un relleno de 15 mm (585 x 205 mm) bajo cada lateral aire, el lateral aire queda como apoyo firme y el '
+        f'sistema cumple en resistencia y flecha con tubo cal. 16</b>: L/{fl["relleno"]["frente"]["L_sobre_fin"]:.0f} a '
+        f'largo plazo en el tramo {fl["relleno"]["frente"]["tramo"]}, tableros con índice {f1(tb["relleno"]["u"])} y '
+        f'uniones al {un["relleno"]:.0%}. Ese resultado supone una fijación casi rígida entre el tubo y los tableros; con '
+        f'una fijación realista de pijas a cada 150 mm la flecha del tramo central queda en '
+        f'L/{fl["relleno y entrepano pijas"]["frente"]["L_sobre_fin"]:.0f} con cal. 16, al límite, y en '
+        f'L/{fl["relleno y entrepano cal. 18 pijas"]["frente"]["L_sobre_fin"]:.0f} con cal. 18. <b>Con tubo cal. 14 y pijas '
+        f'cumple todo</b>: L/{fl[REC]["frente"]["L_sobre_fin"]:.0f}, flexión al {V["ptr"][REC]["filas"][0]["u_M"]:.0%}, '
+        f'pija más cargada al {fij[REC][0]["u"]:.0%}.',
     ]
     if pandeo:
         items.append(
@@ -321,21 +355,25 @@ def main():
             f'relleno baja a {mm(abomb("relleno", False))} (límite visual 2.9 mm, λ límite '
             f'{rango_lambda(V, "relleno", False)[0]}). Con relleno y <b>un entrepaño fijo intermedio a 1120 mm</b> en cada '
             f'torre queda en {mm(abomb("relleno y entrepano", False))} y λ {rango_lambda(V, "relleno y entrepano", False)[0]}.')
+    ap_sup = max(f['u_suplemento'] for v in ('relleno', rst, e18, REC) for f in V['apoyo_tableros'].get(v, []))
     items += [
-        f'<b>Queda al límite el apoyo del tubo de {B:.0f} mm sobre el canto de 15 mm</b> del lateral aire '
-        f'({ap["relleno"]:.2f} de su resistencia con relleno, {ap[rst]:.2f} si además se omiten los tornillos entre '
-        'maleteros). Se resuelve con una solera de acero de 3" bajo el PTR en la parte '
-        'superior de cada torre, que reparte la reacción en un ancho mayor.',
-        f'Sin anclaje, el mueble se voltea con una aceleración horizontal de {vol["c_limite"]:.2f} g. Hay que fijarlo al '
-        f'muro: {vol["anclas"][-1]["F"] / 1e3:.2f} kN por torre y hasta '
-        f'{max(a["F"] for a in vol["anclas"] if a["xyz"][2] > 2000) / 1e3:.2f} kN por taquete de maletero con el coeficiente adoptado.',
-        'Las repisas de 15 mm (pisos de maletero y entrepaños de torre) cumplen resistencia; con carga de almacenamiento '
-        'sostenida su flecha diferida supera L/200, un tema de apariencia.',
+        f'<b>El apoyo del tubo sobre los cantos de 15 mm queda al límite</b>: {ap["relleno"]:.2f} de la resistencia con '
+        f'relleno y {ap[rst]:.3f} si además se omiten los tornillos entre maleteros. Un suplemento de canto de 15 mm '
+        f'encolado y atornillado a la cara interior de cada lateral aire, a ras de su canto superior, lo baja a '
+        f'{ap_sup:.2f}.',
+        f'Sin anclaje, el mueble vacío se voltea con una aceleración horizontal de {vac["c_limite"]:.2f} g y cargado con '
+        f'{vol["casos"]["cargado"]["c_limite"]:.2f} g. Hay que fijarlo al muro: {vol["anclas"][-1]["F"] / 1e3:.2f} kN por '
+        f'torre y hasta {max(a["F"] for a in vol["anclas"] if a["xyz"][2] > 2000) / 1e3:.2f} kN por taquete de maletero con '
+        'el coeficiente adoptado. El anclaje también limita el desplome en servicio.',
+        'Las repisas de 15 mm cumplen resistencia; con carga de almacenamiento sostenida su flecha diferida supera L/200. '
+        'Es un tema de apariencia que se corrige con un apoyo intermedio en el piso de los maleteros y un refuerzo '
+        'frontal en los entrepaños de torre.',
     ]
     H += lista(items)
     H += [PageBreak(), p('Resumen de verificaciones', 'h2')]
     H += [tabla_resumen(V), p('Verde: cumple con holgura. Amarillo: al límite o requiere atención. Rojo: no cumple. '
-                              'Tubo cal. 16 salvo indicación; "-" indica caso no analizado.', 'cap')]
+                              'Tubo cal. 16 y fijación rígida del PTR salvo indicación; "-" indica caso no analizado. La '
+                              'estabilidad de la solución recomendada se toma de la variante con relleno y entrepaño.', 'cap')]
     H += [PageBreak()]
 
     # ------------------------------------------------------------------ 1. alcance
@@ -405,7 +443,8 @@ def main():
                           f'I = {c["I"] / 1e4:.2f} cm⁴; Z = {c["Z"] / 1e3:.2f} cm³; {c["masa"]:.2f} kg/m',
                           'Espesor de diseño 0.93 t (AISC B4.2); radio exterior 2t' + (' (caso base)' if v == 'base' else '')])
     filas.append(['Confirmat 7 x 50 en melamina 15 mm', f'F<sub>v,k</sub> = {P.CONFIRMAT["Fv_k"] / 1e3:.1f} kN; '
-                  f'F<sub>ax,k</sub> = {P.CONFIRMAT["Fax_k"] / 1e3:.1f} kN', 'Valores adoptados, verificar con el fabricante'])
+                  f'F<sub>ax,k</sub> = {P.CONFIRMAT["Fax_k"] / 1e3:.1f} kN', 'Valores adoptados, verificar con el fabricante. '
+                  'Se usan también para los tornillos de unión entre maleteros y las pijas del PTR, del lado conservador'])
     H += [tabla(filas, [5.5, 5.8, 6.2])]
 
     # ------------------------------------------------------------------ 4. cargas
@@ -440,8 +479,9 @@ def main():
         f'en compresión cuando un canto apoya directamente en una cara. Son {mal["uniones"]} resortes de canto y '
         f'{mal["uniones_cara"]} de cara (entrepaños sobre amarres y travesaños, y 4 tornillos entre maleteros contiguos).',
         f'Los PTR de {B:.0f} x {B:.0f} mm son vigas elásticas 3D en su eje; los maleteros se elevan {B:.0f} mm. El '
-        'contacto con torres y maleteros es solo a compresión (el mueble descansa sobre el PTR) con resortes '
-        'horizontales que representan la fijación. Se resuelve por Newton para cada combinación.',
+        'contacto vertical con torres y maleteros es solo a compresión (el mueble descansa sobre el PTR); en horizontal '
+        'la fijación se supone rígida, y en la sección 6.6 se repite con pijas de rigidez realista. Se resuelve por '
+        'Newton para cada combinación.',
         'Base del zócalo articulada en el piso. Puertas y cajones se aplican como cargas en el tablero que los '
         'soporta (bisagras del lado del lateral aire en las torres).',
         'Controles: el peso del modelo coincide con el del despiece; las reacciones igualan la carga aplicada; '
@@ -449,18 +489,19 @@ def main():
     ])
     H += [p('Variantes analizadas, cada una a corto y largo plazo: proyecto con tubo cal. 18, 16 y 14; proyecto sin '
             'tornillos entre maleteros; relleno de 15 mm bajo cada lateral aire, con y sin tornillos entre maleteros; '
-            'relleno más un entrepaño fijo intermedio a 1120 mm en cada torre, con tubo cal. 16 y cal. 18; y, como '
-            'referencia, el proyecto con PTR de 3" x 3". Además uniones diez veces más rígidas (sensibilidad) y caso '
-            'horizontal con anclajes al muro.')]
+            'relleno más un entrepaño fijo intermedio a 1120 mm en cada torre, con tubo cal. 16 y cal. 18, y con fijación '
+            'del PTR por pijas; y, como referencia, el proyecto con PTR de 3" x 3". Las variantes principales se revisan '
+            'en estado último también con la rigidez final de la melamina. Además uniones diez veces más rígidas '
+            '(sensibilidad) y caso horizontal con anclajes al muro.')]
 
     # ------------------------------------------------------------------ 6. resultados
     H += [PageBreak(), p('6. Resultados', 'h1'), p('6.1 Cómo trabaja el conjunto y cómo llega la carga a las torres', 'h2'),
-          p(f'Con un tubo de {B:.0f} x {B:.0f} mm la viga resistente no es el PTR sino la fila de maleteros: tres cajas '
-            'de 870 mm de altura unidas por sus costados, apoyadas en los extremos sobre las torres. El tubo acompaña '
-            'su deformación y reparte la carga en la parte superior de cada torre. La figura 3 y la tabla muestran qué '
-            'elemento de la torre recibe la reacción de cada PTR. En el proyecto, el lateral aire recibe la mayor parte '
-            'del frente aunque no llega al piso; la pasa por tornillos al tablero trasero. El PTR trasero se apoya sobre '
-            'todo en el canto del tablero trasero de 15 mm, que trabaja como muro.')]
+          p(f'El tubo de {B:.0f} x {B:.0f} mm se apoya en los cuatro laterales de las torres y comparte la carga con los '
+            'maleteros, que son más rígidos que él y están fijados a él. Lo que decide el comportamiento es la rigidez de '
+            'los apoyos. La figura 3 y la tabla muestran qué elemento de la torre recibe la reacción de cada PTR. En el '
+            'proyecto, el lateral aire recibe la mayor parte del frente aunque no llega al piso; la pasa por tornillos al '
+            'tablero trasero y por eso cede. El PTR trasero se apoya sobre todo en el canto del tablero trasero de 15 mm, '
+            'que trabaja como muro.')]
     H += fig('fig05_reparto_apoyos.png', 16.5, 'Figura 3. Reacción de cada PTR sobre los elementos de la torre izquierda (la derecha es simétrica), combinación G + Q.')
     vs = [v for v in ('base', 'relleno', 'relleno y entrepano', st) if v in rep]
     filas = [['PTR / elemento de la torre'] + [f'{ETQ[v]} (kN)' for v in vs]]
@@ -475,54 +516,72 @@ def main():
           p(f'Sección compacta en los tres calibres (b/t = {cap["b_t"]:.1f} en cal. 16, λ<sub>p</sub> = {cap["lp_f"]:.1f}). '
             'Resistencias de diseño AISC 360-16 (F7, G4 y J10) con espesor de diseño 0.93 t; como no se conoce el radio '
             'de esquina se usan b = h = B - 3t y k = 1.5t. La revisión de paredes compara la reacción del lateral exterior '
-            'con la resistencia de extremo y la del lateral aire con la interior. Comprobación manual: si toda la carga que '
-            f'los maleteros apoyan en el PTR frontal ({mn["ELU-A1 1.2G+1.6Q"]["W"] / 1e3:.2f} kN en 1.2G + 1.6Q) la '
-            f'tomara el tubo como viga simple de 2865 mm, M<sub>u</sub> = WL/8 = {mn["ELU-A1 1.2G+1.6Q"]["M_manual"] / 1e6:.2f} kN·m '
-            f'y la flecha de servicio 5WL³/384EI = {mn["ELS G+Q"]["flecha_manual"]:.0f} mm. El modelo da '
-            f'{mn["ELU-A1 1.2G+1.6Q"]["M_fe"] / 1e6:.2f} kN·m y {mn["ELS G+Q"]["flecha_fe"]:.1f} mm porque la fila de '
-            'maleteros, mucho más rígida, toma la carga y el tubo solo se deforma con ella. Por eso la verificación '
-            'determinante del PTR es la flecha, que es la del conjunto.')]
-    H += fig('fig04_ptr_diagramas.png', 16.5, 'Figura 4. Momento y cortante últimos (1.2G + 1.6Q) y desplazamiento en servicio (G + Q) a lo largo de cada PTR.')
-    filas = [['Variante', 'Perfil', 'φM<sub>n</sub> (kN·m)', 'M<sub>u</sub>/φM<sub>n</sub>', 'V<sub>u</sub>/φV<sub>n</sub>',
-              'Flecha G+Q (mm)', 'Flecha largo plazo (mm)', 'Relación']]
+            'con la resistencia de extremo y la del lateral aire con la interior. Como el reparto de cargas entre el tubo y '
+            'la melamina depende de la rigidez, la flexión se revisa con la rigidez instantánea y con la final, '
+            'E/(1 + ψ<sub>2</sub>k<sub>def</sub>), según EN 1995-1-1 2.3.2.2; la tabla da la que gobierna.'),
+          p(f'Comprobación manual con la carga que los maleteros apoyan en el PTR frontal ({mA["W"] / 1e3:.2f} kN en '
+            f'1.2G + 1.6Q y {mS["W"] / 1e3:.2f} kN en G + Q), repartida a lo largo del tubo. Como viga continua sobre los '
+            f'cuatro laterales con apoyos firmes: M<sub>u</sub> = {mA["M_continua"] / 1e6:.2f} kN·m y flecha de servicio '
+            f'de {mS["flecha_continua"]:.1f} mm en el tramo central. Como viga simple de 2865 mm, si el lateral aire no '
+            f'apoyara: M<sub>u</sub> = WL/8 = {mA["M_manual"] / 1e6:.2f} kN·m y 5WL³/384EI = {mS["flecha_manual"]:.0f} mm. '
+            f'El modelo da {mA["M_fe"] / 1e6:.2f} kN·m con rigidez instantánea: menos que la viga continua porque los '
+            'maleteros, más rígidos que el tubo y fijados a él, toman parte de la carga. En el proyecto la flecha del modelo '
+            f'({mS["flecha_fe"]:.1f} mm respecto a los laterales exteriores) es mucho mayor que la de la viga continua porque '
+            'el lateral aire cede: es un apoyo flexible.')]
+    H += fig('fig04_ptr_diagramas.png', 16.5, 'Figura 4. Momento y cortante últimos (1.2G + 1.6Q, rigidez instantánea) '
+             'y desplazamiento en servicio (G + Q) a lo largo de cada PTR.')
+    filas = [['Variante', 'Perfil', 'φM<sub>n</sub> (kN·m)', 'M<sub>u</sub>/φM<sub>n</sub> (rigidez)',
+              'V<sub>u</sub>/φV<sub>n</sub>', 'Flecha G+Q (mm)', 'Flecha largo plazo (mm)', 'Relación (tramo)']]
     est = []
     for var in ('base', '30x30 cal. 18', '30x30 cal. 14', st, 'relleno', rst, 'relleno y entrepano', e18,
+                'relleno y entrepano pijas', 'relleno y entrepano pijas a 75 mm', 'relleno y entrepano cal. 18 pijas', REC,
                 'PTR 3x3 pulg'):
         if var not in V['ptr'] or var not in fl:
             continue
         c = V['ptr'][var]['capacidad']
         f = V['ptr'][var]['filas'][0]
         d = fl[var]['frente']
-        filas.append([ETQ[var], c['perfil'].replace('30x30', f'{B:.0f}x{B:.0f}'), f1(c['phiMn'] / 1e6), f1(f['u_M']),
-                      f1(f['u_V']), f1(d['inst'], 1), f1(d['fin'], 1), f'L/{d["L_sobre_fin"]:.0f}'])
-        est.append(estado(max(f['u_M'], f['u_V'], d['fin'] / d['lim'])))
-    H += [tabla(filas, [4.6, 2.3, 1.6, 1.6, 1.6, 1.8, 2.1, 1.7], est)]
-    H += [p('Flechas del PTR frontal medidas respecto a la cuerda entre laterales exteriores (L = 2865 mm); límite '
-            'L/300 = 9.6 mm. El PTR de 3" x 3" se incluye solo como comparación: con él la flecha cumple aun sin '
-            'relleno, pero las torres siguen necesitando el relleno y el entrepaño por estabilidad (revisión anterior).')]
+        filas.append([ETQ[var], c['perfil'].replace('30x30', f'{B:.0f}x{B:.0f}'), f1(c['phiMn'] / 1e6),
+                      f'{f1(f["u_M"])} ({f["rigidez"]})', f1(max(g['u_V'] for g in V['ptr'][var]['filas'])),
+                      f1(d['inst'], 1), f1(d['fin'], 1), f'L/{d["L_sobre_fin"]:.0f} ({d["tramo"]})'])
+        est.append(estado(max(f['u_M'], d['fin'] / d['lim'])))
+    H += [tabla(filas, [4.2, 2.1, 1.5, 2.3, 1.4, 1.6, 1.9, 2.5], est)]
+    H += [p('Flecha del PTR frontal respecto a dos cuerdas: entre laterales exteriores (L = 2865 mm, límite 9.6 mm) y '
+            'entre laterales aire (tramo central, L = 1655 mm, límite 5.5 mm); se informa la que gobierna. El PTR de '
+            '3" x 3" se incluye solo como comparación con la revisión anterior.')]
 
     H += [p('6.3 Deformaciones', 'h2')]
     filas = [['Elemento', 'Variante', 'Instantánea G+Q (mm)', 'Largo plazo (mm)', 'Límite (mm)', 'Relación']]
     est = []
-    for var in ('base', 'relleno', 'relleno y entrepano'):
+    for var in ('base', 'relleno', 'relleno y entrepano', REC):
         if var not in fl:
             continue
         for ptr in ('frente', 'fondo'):
-            d = fl[var][ptr]
-            filas.append([f'PTR {ptr} (L = 2865 mm)', ETQ[var], f1(d['inst']), f1(d['fin']), f'{d["lim"]:.1f} (L/300)',
-                          f'L/{d["L_sobre_fin"]:.0f}'])
-            est.append(estado(d['fin'] / d['lim']))
+            for tramo, d in fl[var][ptr]['tramos'].items():
+                filas.append([f'PTR {ptr}, tramo {tramo} (L = {d["L"]:.0f} mm)', ETQ[var], f1(d['inst']), f1(d['fin']),
+                              f'{d["lim"]:.1f} (L/300)', f'L/{d["L_sobre_fin"]:.0f}'])
+                est.append(estado(d['fin'] / d['lim']))
     for var in ('base', 'relleno'):
         for d in V['flechas_repisas'].get(var, []):
             filas.append([f'{legible(d["tablero"])} (L = {d["L"]:.0f})', ETQ[var], f1(d['inst']), f1(d['fin']),
                           f'{d["lim"]:.1f} (L/200)', f'L/{d["L"] / d["fin"]:.0f}'])
             est.append(estado(d['u'], atn=0.85))
-    H += [tabla(filas, [5.2, 2.6, 2.7, 2.4, 2.5, 2.0], est)]
-    H += [p(f'Desplome hacia el frente en la parte alta de los maleteros (G + Q, sin anclaje al muro): '
-            f'{f1(des["base"]["uy_max"], 1)} mm en el proyecto y {f1(des["relleno"]["uy_max"], 1)} mm con relleno. '
+    H += [tabla(filas, [5.6, 3.4, 2.3, 2.1, 2.1, 1.7], est)]
+    rep_r = max(d['u'] for d in V['flechas_repisas']['relleno'])
+    rep_b = next(d for d in V['flechas_repisas']['base'] if d['tablero'].startswith('PTRSOP024'))
+    rep_e = next(d for d in V['flechas_repisas']['relleno'] if d['tablero'].startswith('PTRSOP024'))
+    H += [p(f'Desplome hacia el frente en la parte alta de los maleteros, sin anclaje al muro: '
+            f'{f1(des["base"]["uy_max"], 1)} mm instantáneo en el proyecto y {f1(des["relleno"]["uy_max"], 1)} mm con '
+            f'relleno; con la fluencia llega a {f1(des["base"]["uy_fin"], 1)} y {f1(des["relleno"]["uy_fin"], 1)} mm. '
             'Proviene de que el frente baja más que el fondo y gira los maleteros; el anclaje superior al muro lo '
-            'restringe. Las repisas cumplen resistencia, pero su flecha diferida con 1.2 kN/m² sostenidos excede '
-            'L/200; con cargas reales menores o con un refuerzo frontal el problema desaparece.')]
+            'restringe, así que es necesario también en servicio. '
+            f'En el proyecto la flecha diferida del entrepaño (tope) ({f1(rep_b["fin"], 1)} mm, '
+            f'L/{rep_b["L"] / rep_b["fin"]:.0f}) es más del doble que con relleno ({f1(rep_e["fin"], 1)} mm): la '
+            'diferencia es la carga que le cuelga el lateral aire. Con relleno '
+            f'las repisas cumplen resistencia, pero su flecha diferida con 1.2 kN/m² sostenidos excede L/200 (hasta '
+            f'{rep_r:.1f} veces el límite). En el piso de maletero, que trabaja de frente a fondo entre los dos PTR, eso '
+            'se corrige con un apoyo intermedio a media profundidad o con un tablero más grueso; en los entrepaños de '
+            'torre, con un refuerzo frontal.')]
     H += fig('fig02_deformada.png', 13.0, 'Figura 5. Deformada del proyecto en servicio, amplificada 40 veces.')
     H += fig('fig02b_deformada_relleno.png', 13.0, 'Figura 6. Deformada con relleno bajo el lateral aire, misma escala de amplificación.')
 
@@ -562,63 +621,88 @@ def main():
             est.append(estado(f['u'], atn=0.85))
     H += [tabla(filas, [6.2, 1.2, 1.6, 1.6, 2.1, 2.0, 2.4], est)]
 
-    H += [p('6.6 Tornillos de unión entre maleteros', 'h2'),
-          p('El modelo supone cuatro tornillos por cada costado común entre maleteros contiguos, cerca de las '
-            'esquinas. Con el tubo flexible esos tornillos hacen que la fila de maleteros trabaje como una sola caja. '
-            'Fuerza máxima por tornillo (1.35G + 1.5Q) y su relación con la capacidad del confirmat:')]
-    filas = [['Variante', 'Tracción máx. (N)', 'Cortante máx. (N)', 'Relación']]
+    H += [p('6.6 Tornillos entre maleteros y fijación del PTR', 'h2'),
+          p('El modelo supone cuatro tornillos de unión por cada costado común entre maleteros contiguos, cerca de las '
+            'esquinas. Como unen cara con cara dos costados de 15 mm, deben ser tornillos pasantes de unión de módulos '
+            '(M6 con casquillo o tuerca), no confirmat. Solo la tracción carga al tornillo; en compresión los costados se '
+            'apoyan entre sí. La interacción se calcula tornillo por tornillo con 1.35G + 1.5Q y, a falta de datos del '
+            f'fabricante, con las capacidades adoptadas para el confirmat (corte {V["uniones"]["base"]["conector"]["Fv_d"]:.0f} N, '
+            f'tracción {V["uniones"]["base"]["conector"]["Fax_d"]:.0f} N), que son conservadoras para un tornillo pasante.')]
+    filas = [['Variante', 'Tracción máx. (N)', 'Cortante máx. (N)', 'Tornillo que gobierna: T / V (N)', 'Relación']]
     est = []
-    for var in ('base', 'relleno', 'relleno y entrepano', e18):
+    for var in ('base', st, 'relleno', rst, 'relleno y entrepano', e18, REC):
         t_ = tm.get(var)
         if t_:
-            filas.append([ETQ[var], f'{t_["axial"]:.0f}', f'{t_["corte"]:.0f}', f1(t_['u'])])
+            filas.append([ETQ[var], f'{t_["axial"]:.0f}', f'{t_["corte"]:.0f}',
+                          f'{t_["axial_gob"]:.0f} / {t_["corte_gob"]:.0f}', f1(t_['u'])])
             est.append(estado(t_['u']))
-    H += [tabla(filas, [8.0, 3.0, 3.0, 2.5], est)]
+    H += [tabla(filas, [6.0, 2.4, 2.4, 3.6, 1.8], est)]
     H += [p(f'Sin esos tornillos el proyecto empeora (flecha L/{fl[st]["frente"]["L_sobre_fin"]:.0f}, tablero trasero '
-            f'{f1(tb[st]["u"])}, uniones al {un[st]:.0%}); con relleno sigue cumpliendo (L/{fl[rst]["frente"]["L_sobre_fin"]:.0f}, '
-            f'uniones al {un[rst]:.0%}). Aun así conviene colocarlos: reducen la flecha y el desplome.')]
+            f'{f1(tb[st]["u"])}, uniones al {un[st]:.0%}). Con relleno la flecha y las uniones siguen cumpliendo sin ellos '
+            f'(L/{fl[rst]["frente"]["L_sobre_fin"]:.0f}, uniones al {un[rst]:.0%}), pero el apoyo del lateral aire sube de '
+            f'{ap["relleno"]:.2f} a {ap[rst]:.3f}. Conviene colocarlos: bajan la flecha y la compresión en ese canto.')]
+    # fijacion PTR-maletero
+    pj = [v for v in ('relleno y entrepano pijas', 'relleno y entrepano cal. 18 pijas') if v in fl]
+    H += [p('El contacto entre el PTR y los tableros solo transmite compresión en vertical; en horizontal el modelo base '
+            'supone una fijación rígida, que hace trabajar juntos al tubo y a los maleteros. Para ver cuánto pesa esa '
+            'hipótesis se repitió la solución con una fijación realista: pijas a cada 150 mm, de 1500 N/mm cada una, en '
+            'torres y maleteros, y también a cada 75 mm.')]
+    filas = [['Variante', 'Fijación', 'M<sub>u</sub>/φM<sub>n</sub>', 'Flecha largo plazo', 'Tableros', 'Uniones',
+              'Tornillos entre maleteros', 'Pija más cargada (N)']]
+    est = []
+    for var, v_, nom in (('relleno y entrepano', 'relleno y entrepano', 'rígida'),
+                         ('relleno y entrepano', 'relleno y entrepano pijas', 'pijas a 150 mm'),
+                         ('relleno y entrepano', 'relleno y entrepano pijas a 75 mm', 'pijas a 75 mm'),
+                         (e18, e18, 'rígida'), (e18, 'relleno y entrepano cal. 18 pijas', 'pijas a 150 mm'),
+                         ('Relleno + entrepaño, cal. 14', REC, 'pijas a 150 mm')):
+        if v_ not in fl or v_ not in V['ptr']:
+            continue
+        fj = fij.get(v_)
+        fp_ = fl[v_]['frente']
+        filas.append([ETQ.get(var, var), nom, f1(V['ptr'][v_]['filas'][0]['u_M']), f'L/{fp_["L_sobre_fin"]:.0f}',
+                      f1(tb[v_]['u']), f1(un[v_]), f1(tm[v_]['u']) if tm.get(v_) else '-',
+                      f'{fj[0]["por_pija"]:.0f}' if fj else '-'])
+        est.append(estado(max(V['ptr'][v_]['filas'][0]['u_M'], fp_['fin'] / fp_['lim'], tb[v_]['u'], un[v_],
+                              tm[v_]['u'] if tm.get(v_) else 0, fj[0]['u'] if fj else 0)))
+    if pj:
+        H += [tabla(filas, [3.8, 2.3, 1.6, 2.1, 1.6, 1.5, 2.1, 2.3], est)]
+        fr = fij['relleno y entrepano']
+        H += [p('Con fijación rígida cada tramo de 150 mm de tubo tendría que transmitir hasta '
+                f'{fr[0]["por_pija"]:.0f} N en horizontal, más de lo que da una pija en melamina '
+                f'({fr[0]["Fv_d"]:.0f} N de diseño, valor adoptado igual al del confirmat): la fijación rígida no es '
+                'alcanzable con pijas y las variantes con pijas son las representativas. Con ellas la fuerza por pija es '
+                f'aceptable ({fij["relleno y entrepano pijas"][0]["por_pija"]:.0f} N con cal. 16 y '
+                f'{fij[REC][0]["por_pija"]:.0f} N con cal. 14), pero la flecha del tramo central crece: con cal. 16 queda al '
+                'límite y con cal. 18 no cumple. Con cal. 14 todo cumple, y por eso es la solución recomendada.')]
 
     H += [p('6.7 Apoyo del PTR sobre cantos de tablero', 'h2'),
-          p('El PTR descansa sobre el canto de 15 mm de los tableros. En los laterales el área de contacto es 15 mm por el '
-            f'solape entre el tubo y el canto: {B:.0f} mm bajo el PTR frontal, pero solo 15 mm para el lateral aire bajo el '
-            'PTR trasero, porque la otra mitad de la huella cae sobre el canto del tablero trasero, que apoya al tubo en '
-            'todo su largo. Se verifica la compresión de canto con la reacción de 1.35G + 1.5Q contra '
-            f'f<sub>c,d</sub> = {V["apoyo_tableros"]["base"][0]["fc_d"]:.2f} MPa.')]
-    filas = [['Apoyo', 'Variante', 'Ancho (mm)', 'Reacción (kN)', 'σ (MPa)', 'σ/f<sub>c,d</sub>']]
+          p('El PTR descansa sobre el canto de 15 mm de los tableros. Se usan las fuerzas de contacto nodo por nodo de '
+            '1.35G + 1.5Q y se comparan con f<sub>c,d</sub> = '
+            f'{V["apoyo_tableros"]["base"][0]["fc_d"]:.2f} MPa. En los laterales bajo el PTR frontal el área es 15 mm por el '
+            f'solape de {B:.0f} mm con el tubo. Bajo el PTR trasero el tubo se arquea sobre la torre y apoya casi todo en la '
+            'esquina del lateral aire con el tablero trasero; ahí se revisa la esquina en conjunto: el lateral aire en '
+            '15 x 15 mm (la otra mitad de la huella cae sobre el trasero) más el trasero en 30 mm de largo. La última '
+            'columna da la relación con un suplemento de canto: un tablero de 15 mm encolado y atornillado a la cara '
+            'interior del lateral aire, a ras de su canto superior, que duplica el ancho de apoyo.')]
+    filas = [['Apoyo', 'Variante', 'Reacción (kN)', 'Área (mm²)', 'σ (MPa)', 'σ/f<sub>c,d</sub>', 'Con suplemento']]
     est = []
-    for var in ('base', 'relleno', e18):
+    for var in ('base', 'relleno', rst, REC):
         for f in V['apoyo_tableros'].get(var, []):
             if f['R'] < 50:
                 continue
-            filas.append([f['apoyo'].replace('torre izq', 'torre'), ETQ[var], f'{f["ancho"]:.0f}', f1(f['R'] / 1e3),
-                          f1(f['sigma']), f1(f['u'])])
+            filas.append([f['apoyo'], ETQ[var], f1(f['R'] / 1e3), f'{f["area"]:.0f}', f1(f['sigma']), f1(f['u']),
+                          f1(f['u_suplemento'])])
             est.append(estado(f['u']))
-    H += [tabla(filas, [5.6, 4.0, 1.6, 1.8, 1.8, 2.0], est)]
-    # Solera de 3" x 3/16" bajo el PTR: los dos tubos van a paño exterior, asi que la solera se extiende hacia
-    # dentro del mueble (76.2 - B) mm mas alla del tubo. Placa de reparto en voladizo con ancho efectivo 15 + 2c.
-    b_sol, t_sol = 76.2, 4.76
-    c_sol = b_sol - B
-    sol = {}
-    for var in ('relleno', rst, e18):
-        for f in V['apoyo_tableros'].get(var, []):
-            if 'lateral aire' not in f['apoyo']:
-                continue
-            ptr = f['apoyo'].split(',')[0]
-            a_s = f['ancho'] + c_sol
-            M = f['R'] * c_sol ** 2 / (2 * a_s)
-            sig_p = 6 * M / ((P.TABLERO['espesor'] + 2 * c_sol) * t_sol ** 2)
-            prev = sol.get(ptr)
-            if prev is None or f['u'] > prev[1]:
-                sol[ptr] = (a_s, f['u'] * f['ancho'] / a_s, sig_p, f['u'])
-    H += [p(f'Con relleno, el lateral aire toma la mayor parte de la carga y su canto queda al {ap["relleno"]:.0%} de la '
-            'resistencia de diseño, tanto al frente como al fondo; sin tornillos entre maleteros llega al '
-            f'{ap[rst]:.0%}. Con una solera de acero de 3" x 3/16" bajo el PTR, sobre la parte superior de cada torre, el '
-            f'ancho de contacto con el lateral aire pasa a {sol["frente"][0]:.0f} mm bajo el PTR frontal y a '
-            f'{sol["fondo"][0]:.0f} mm bajo el trasero, y la relación más alta baja a {sol["frente"][1]:.2f} y '
-            f'{sol["fondo"][1]:.2f}. La solera trabaja como placa de reparto en voladizo de {c_sol:.0f} mm más allá del '
-            f'tubo; con un ancho efectivo de 15 + 2 x {c_sol:.0f} mm su esfuerzo de flexión es de unos '
-            f'{max(v[2] for v in sol.values()):.0f} MPa, muy por debajo de F<sub>y</sub>. Además reparte la carga al '
-            'travesaño superior y al tablero trasero.')]
+    H += [tabla(filas, [4.6, 3.6, 1.7, 1.6, 1.4, 1.5, 1.8], est)]
+    esq = {v: next((f for f in V['apoyo_tableros'][v] if 'esquina' in f['apoyo']), None) for v in ('base', 'relleno')}
+    ap_sup = max(f['u_suplemento'] for v in ('relleno', rst, e18, REC) for f in V['apoyo_tableros'].get(v, []))
+    H += [p(f'Con relleno el canto del lateral aire queda al {ap["relleno"]:.0%} de la resistencia de diseño y sin '
+            f'tornillos entre maleteros al {ap[rst]:.1%}. En la esquina trasera el trasero recibe '
+            f'{esq["relleno"]["R_trasero_esquina"] / 1e3:.2f} de sus {esq["relleno"]["R_trasero_total"] / 1e3:.2f} kN dentro '
+            f'de 30 mm del lateral aire. Con el suplemento de canto la relación más alta baja a {ap_sup:.2f}. El suplemento '
+            'entrega la mitad de la reacción al lateral aire por cortante: tres confirmat más cola dan '
+            f'{3 * V["uniones"]["base"]["conector"]["Fv_d"] / 1e3:.2f} kN solo con los tornillos, más que la mitad de la '
+            'reacción del lateral aire en cualquier variante.')]
 
     H += [p('6.8 Estabilidad de laterales', 'h2')]
     if pandeo:
@@ -628,7 +712,7 @@ def main():
                 'el canto libre de cada lateral. Se mide el abombamiento de los laterales respecto al plano de sus '
                 'esquinas.')]
         filas = [['Caso', 'Abombamiento a λ = 1 (mm)', 'Pieza que gobierna', 'Factor de carga límite λ',
-                  'λ<sub>cr</sub> de Southwell (referencia)']]
+                  'Pendiente final / inicial', 'λ<sub>cr</sub> de Southwell (referencia)']]
         est = []
         for d in pandeo:
             c1 = min(d['curva'], key=lambda k: abs(k['lam'] - 1.0)) if d['curva'] else None
@@ -636,14 +720,20 @@ def main():
             lu = d['lambda_ultimo']
             txt = texto_lambda(d)
             ab1 = c1['abombamiento_lateral'] if c1 else None
+            ac = aceleracion(d)
             filas.append([d['variante'].replace('gamma_M', 'γM'), f1(ab1) if c1 else '-',
-                          legible(c1['pieza']) if c1 else '-', txt, f'{lc:.1f}' if lc else '-'])
+                          legible(c1['pieza']) if c1 else '-', txt, f'{ac:.1f}' if ac else '-',
+                          f'{lc:.1f}' if lc else '-'])
             u_ab = (ab1 / 2.9) if (ab1 is not None and 'largo' in d['variante']) else 0.0
             est.append('mal' if (lu < 1.5 or u_ab > 1.0) else ('atn' if lu < 3.0 else 'ok'))
-        H += [tabla(filas, [4.6, 2.8, 3.4, 3.0, 3.7], est)]
+        H += [tabla(filas, [4.2, 2.3, 2.7, 3.4, 2.0, 2.9], est)]
         H += [p('El factor de carga límite es el intervalo entre el último paso convergido y el menor incremento que ya no '
-                'converge (antes de detenerse se reintenta con pasos de 1/4 y 1/16 y con otros algoritmos); en los casos '
-                'marcados con ">" la corrida terminó sin pérdida de estabilidad. La recta de Southwell se da solo como '
+                'converge (antes de detenerse se reintenta con pasos de 1/4 y 1/16 y con otros algoritmos). Cada corrida '
+                'tiene un tope de 50 minutos de cálculo; las marcadas con ">" se detuvieron por ese tope o al llegar a '
+                'λ = 4 y el valor es una cota inferior. La pendiente final / inicial compara cómo crece el abombamiento del '
+                'tablero vertical que gobierna al final y al principio de la corrida: cerca de 1 el comportamiento es lineal '
+                'y muy por encima de 1 la rigidez se está perdiendo. Con pendiente cercana a 1, una corrida que deja de '
+                'converger no muestra pandeo y se marca como detención numérica. La recta de Southwell se da solo como '
                 'referencia. Criterios: con λ de 3 o más se considera holgado, entre 1.5 y 3 al límite y por debajo de 1.5 '
                 'no cumple; además, el abombamiento con la carga sostenida no debe pasar de L/300 del tramo libre (2.9 mm), '
                 'para que el lateral no se vea pandeado con el tiempo.')]
@@ -656,17 +746,20 @@ def main():
                     f'{d0["curva"][-1]["abombamiento_lateral"]:.0f} mm al final de la corrida. No hay un pandeo súbito sino '
                     'una flexión fuera del plano que crece con la carga, y el tablero se agota antes por resistencia (índice '
                     f'{f1(lat0)} del lateral exterior en el análisis lineal, sección 6.4) y por la deformación diferida.')]
-        H += fig('fig06_pandeo.png', 16.0, 'Figura 7. Factor de carga contra abombamiento máximo de laterales.')
+        H += fig('fig06_pandeo.png', 16.0, 'Figura 7. Factor de carga contra abombamiento máximo de laterales. Línea '
+                 'discontinua: 2.9 mm; las curvas que salen de la escala se indican con su último punto.')
         H += fig('fig07_modo_pandeo.png', 9.5, 'Figura 8. Abombamiento del lateral exterior izquierdo en el último paso '
                  'convergido del proyecto a corto plazo: se concentra en el canto frontal libre.')
     else:
         H += [p('(Análisis no lineal geométrico no disponible en esta corrida.)')]
 
     H += [p('6.9 Volteo y anclaje al muro', 'h2'),
-          p(f'Centro de masa de G + ψ<sub>2</sub>Q a {vol["z_cm"]:.0f} mm de altura y {vol["y_cm"]:.0f} mm detrás del '
-            f'frente del zócalo. Sin anclaje, la aceleración horizontal que inicia el volteo es {vol["c_limite"]:.2f} g. '
-            f'Con H = {C["c_sismico"]}(G + ψ<sub>2</sub>Q) = {vol["H"] / 1e3:.2f} kN el factor de seguridad sin anclaje '
-            f'sería {vol["FS"]:.2f}. Fuerzas en anclajes del modelo con taquetes en la parte alta trasera:')]
+          p(f'Con G + ψ<sub>2</sub>Q, barra incluida, el centro de masa queda a {vol["z_cm"]:.0f} mm de altura y '
+            f'{vol["y_cm"]:.0f} mm detrás de la cara frontal del zócalo; vacío, a {vac["z_cm"]:.0f} mm y {vac["brazo"]:.0f} mm. '
+            f'Sin anclaje, la aceleración horizontal que inicia el volteo es {vac["c_limite"]:.2f} g con el mueble vacío y '
+            f'{vol["casos"]["cargado"]["c_limite"]:.2f} g cargado. Con H = {C["c_sismico"]}(G + ψ<sub>2</sub>Q) = '
+            f'{vol["H"] / 1e3:.2f} kN el factor de seguridad sin anclaje sería {vol["FS"]:.2f}. Fuerzas en anclajes del '
+            'modelo con taquetes en la parte alta trasera:')]
     filas = [['Ubicación del anclaje', 'Altura (mm)', 'Fuerza (kN)']]
     for a in sorted(vol['anclas'], key=lambda a: (a['xyz'][2], a['xyz'][0])):
         x = a['xyz'][0]
@@ -680,41 +773,50 @@ def main():
     H += lista([
         f'<b>Con el {NOM_PTR} el mueble, tal como está diseñado, no cumple</b>: la flecha del conjunto, las uniones '
         'y el tablero trasero de las torres quedan fuera de criterio, y los laterales exteriores se pandean con la '
-        'carga sostenida. El calibre del tubo no cambia esa conclusión.',
+        'carga sostenida. El calibre del tubo no cambia esa conclusión, porque lo que falla es el apoyo del tubo en el '
+        'lateral aire.',
         '<b>Colocar un relleno de melamina de 15 mm (585 x 205 mm) bajo cada lateral aire</b>, entre la cubierta de '
         'cajones y el amarre inferior, confirmado a la cubierta, al trasero y a los amarres. Así el lateral aire '
         'apoya en compresión directa hasta el piso. Alternativa equivalente: un lateral interior de una pieza de '
-        '585 x 1455 mm. Con esto el tubo de 30 x 30 mm cumple en resistencia y flecha, en cualquier calibre de 18 a 14.',
+        '585 x 1455 mm.',
+        f'<b>Usar tubo de {B:.0f} x {B:.0f} mm cal. 14</b> (1.9 mm). Con relleno, entrepaño y pijas cumple resistencia y '
+        f'flecha (L/{fl[REC]["frente"]["L_sobre_fin"]:.0f}); el cal. 16 queda al límite de la flecha del tramo central '
+        f'(L/{fl["relleno y entrepano pijas"]["frente"]["L_sobre_fin"]:.0f} con pijas a 150 mm y '
+        f'L/{fl["relleno y entrepano pijas a 75 mm"]["frente"]["L_sobre_fin"]:.0f} a 75 mm) y el cal. 18 no cumple.',
         '<b>Agregar un entrepaño fijo intermedio</b> (590 x 585 x 15 mm, a unos 1120 mm del piso) en el compartimento '
         'superior de cada torre, confirmado a los dos laterales y al trasero con separación máxima de 150 mm. Arriostra '
         'el canto frontal de los laterales, que controla la estabilidad. Si se prefiere no perder el espacio, la '
         'alternativa es un poste metálico (PTR de 1" o ángulo de 1 1/2") en cada esquina frontal de la torre, desde el '
         'piso hasta el PTR.',
-        f'<b>Colocar una solera de acero de 3" x 3/16" bajo cada PTR</b> en la parte superior de cada torre, a todo su '
-        f'ancho (620 mm), para repartir la reacción del tubo de {B:.0f} mm sobre los cantos de 15 mm.',
-        '<b>Atornillar los maleteros entre sí</b> (cuatro tornillos de unión por costado común, cerca de las esquinas) '
-        'y <b>fijar el PTR</b> a las torres y a los maleteros. La fila de maleteros es la que da rigidez al conjunto.',
+        '<b>Colocar un suplemento de canto en cada lateral aire</b>: una pieza de melamina de 15 mm de unos 585 x 100 mm, '
+        'encolada y con tres confirmat a la cara interior del lateral aire, a ras de su canto superior, para que el tubo '
+        'apoye en 30 mm de ancho en lugar de 15 mm.',
+        '<b>Atornillar los maleteros entre sí</b> con cuatro tornillos pasantes de unión de módulos (M6 con casquillo) '
+        'por costado común, cerca de las esquinas, y <b>fijar el PTR</b> a las torres y a los maleteros con pijas a '
+        f'cada 150 mm como máximo (la más cargada recibe {fij[REC][0]["por_pija"]:.0f} N en el estado último, '
+        f'{fij[REC][0]["u"]:.0%} de su capacidad adoptada).',
         '<b>Anclar al muro</b>: dos taquetes en la parte alta trasera de cada torre y dos por maletero, con capacidad '
-        'de diseño en tracción no menor que las fuerzas de la sección 6.9.',
-        f'<b>Si no se coloca el relleno</b>, no basta con atornillar más: las uniones del trasero necesitarían confirmat '
-        f'a cada {s_rec} mm o menos y aun así la flecha y el pandeo de laterales no cumplen.',
-        '<b>Alternativa</b>: con un PTR de 3" x 3" la flecha cumple sin relleno, pero el relleno y el entrepaño siguen '
-        'siendo necesarios por estabilidad de las torres.',
-        '<b>Repisas</b>: con contenidos pesados permanentes conviene un refuerzo frontal en el piso de los maleteros '
-        'y en los entrepaños de torre para limitar la flecha diferida.',
+        'de diseño en tracción no menor que las fuerzas de la sección 6.9. El anclaje también es necesario para '
+        'limitar el desplome en servicio.',
+        f'<b>Si no se coloca el relleno</b>, no basta con atornillar más: las uniones del tablero trasero necesitarían '
+        f'confirmat a cada {s_rec} mm o menos y aun así la flecha y el pandeo de laterales no cumplen.',
+        '<b>Repisas</b>: con contenidos pesados permanentes conviene un apoyo intermedio a media profundidad bajo el '
+        'piso de cada maletero y un refuerzo frontal en los entrepaños de torre, para limitar la flecha diferida.',
     ])
     H += [p('8. Supuestos que conviene confirmar', 'h1')]
     H += lista([
         f'Calibre del tubo de {B:.0f} x {B:.0f} mm: se usó cal. 16 (1.52 mm) como base y se revisaron cal. 18 y cal. 14. '
         'Grado del acero: se adoptó F<sub>y</sub> = 250 MPa.',
         f'Posición de los PTR (a paño frontal y trasero, longitud completa de 2880 mm) y que los maleteros se elevan '
-        f'{B:.0f} mm sobre las torres. La altura total pasa de 2440 a {2440 + B:.0f} mm, y a unos {2440 + B + 4.8:.0f} mm con la '
-        'solera recomendada. El archivo incluye un elemento de referencia de 2480 mm de altura detrás del mueble que podría '
-        f'ser el muro o el plafón del nicho: la holgura quedaría en unos {2480 - 2440 - B - 4.8:.0f} mm.',
-        'Tornillos de unión entre maleteros contiguos (el proyecto con relleno cumple también sin ellos).',
+        f'{B:.0f} mm sobre las torres. La altura total pasa de 2440 a {2440 + B:.0f} mm. El archivo incluye un elemento de '
+        'referencia de 2480 mm de altura detrás del mueble que podría ser el muro o el plafón del nicho: la holgura '
+        f'quedaría en unos {2480 - 2440 - B:.0f} mm.',
+        'Tipo y capacidad de los tornillos de unión entre maleteros y de las pijas del PTR: se usaron las capacidades '
+        'adoptadas del confirmat.',
         'Calidad del tablero y del conector: los valores de resistencia son adoptados para melamina de partículas '
         'de uso interior y deben confirmarse con el proveedor.',
-        'Existencia de la barra de colgar en el hueco central (se incluyó del lado conservador).',
+        'Existencia de la barra de colgar en el hueco central: se incluyó en todas las combinaciones, del lado '
+        'conservador para resistencia y anclaje.',
         'Coeficiente horizontal para anclaje (0.5); debe ajustarse al sitio con la normativa local aplicable.',
     ])
     H += [p('9. Reproducibilidad', 'h1'),

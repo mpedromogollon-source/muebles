@@ -29,7 +29,7 @@ La memoria de cálculo completa está en
 pip install openseespy numpy matplotlib reportlab pillow
 python herramientas/skp_lector.py datos/origen/closet_pedido_mx.skp --xmin 4700 --xmax 7800 \
     --salida datos/piezas_closet.json
-python modelo/ejecutar.py          # ~2 min con 4 núcleos
+python modelo/ejecutar.py          # ~15 min con 4 núcleos
 python modelo/pandeo.py            # análisis no lineal, tarda bastante más
 python modelo/verificaciones.py
 python modelo/figuras.py
@@ -41,15 +41,15 @@ genera `ejecutar.py`.
 
 ## Resultado en breve
 
-* El PTR de 30 x 30 mm no puede cargar los maleteros como viga: como viga simple entre las
-  torres necesitaría 2.7 veces su resistencia. En el modelo, los tres maleteros atornillados
-  entre sí trabajan como una caja rígida y el tubo se deforma con ellos.
-* Tal como está diseñado, el mueble no cumple con ningún calibre (18, 16 o 14): la flecha
-  del frente queda entre L/112 y L/121 a largo plazo, el tablero trasero de las torres y sus
-  uniones se sobrecargan y los laterales exteriores se pandean con la carga sostenida.
-* La causa de fondo: el lateral interior de cada torre ("lateral aire") no llega al piso
-  (hueco de 205 mm) y cuelga de tornillos al trasero.
-* Solución recomendada: relleno de 15 mm (585 x 205 mm) bajo cada lateral aire, entrepaño
-  fijo intermedio a 1120 mm en cada torre, solera de acero de 3" x 3/16" bajo el PTR sobre cada torre
-  (el canto de 15 mm queda al límite bajo un tubo de 30 mm), maleteros atornillados entre sí
-  y anclaje al muro. Con eso el tubo de 30 x 30 mm cumple, incluso en cal. 18.
+* El PTR de 30 x 30 mm trabaja como viga continua sobre los cuatro laterales de las torres. Con
+  apoyos firmes necesitaría la mitad de su resistencia a flexión; el problema del proyecto es que
+  uno de esos apoyos, el lateral interior de cada torre ("lateral aire"), no llega al piso
+  (hueco de 205 mm) y cede porque cuelga de tornillos al tablero trasero.
+* Tal como está diseñado, el mueble no cumple con ningún calibre (18, 16 o 14): la flecha del
+  frente queda entre L/112 y L/121 a largo plazo, el tablero trasero de las torres y sus uniones
+  se sobrecargan y los laterales exteriores se pandean con la carga sostenida.
+* Solución recomendada: relleno de 15 mm (585 x 205 mm) bajo cada lateral aire, entrepaño fijo
+  intermedio a 1120 mm en cada torre, suplemento de canto de 15 mm en la parte alta de cada
+  lateral aire, tubo cal. 14 fijado con pijas a cada 150 mm, maleteros unidos con tornillos
+  pasantes y anclaje al muro. Con fijación realista por pijas el cal. 16 queda al límite de la
+  flecha del tramo central y el cal. 18 no cumple.

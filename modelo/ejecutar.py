@@ -25,6 +25,7 @@ LP = dict(E_tablero=T['E'] / (1 + T['kdef']), k_union=P.K_UNION / (1 + T['kdef']
 ELU_ELS = ['ELU-A1 1.2G+1.6Q', 'ELU-A2 1.4G', 'ELU-T1 1.35G+1.5Q', 'ELU-T2 1.35G', 'ELS G+Q', 'ELS G+0.8Q']
 
 PTR_ELU_ELS = ['ELU-A1 1.2G+1.6Q', 'ELU-A2 1.4G', 'ELS G+Q', 'ELS G+0.8Q']
+K_PIJAS = 1500.0 / 150.0   # N/mm por mm de PTR
 
 VARIANTES = {
     'base': (dict(), ELU_ELS),
@@ -48,9 +49,39 @@ VARIANTES = {
     'relleno sin tornillos entre maleteros largo plazo': (dict(LP, con_relleno=True, tornillos_maleteros=False),
                                                           ['ELS G+0.8Q']),
     'uniones rigidas': (dict(k_union=10 * P.K_UNION), ['ELU-A1 1.2G+1.6Q', 'ELS G+Q']),
+    # sensibilidad: fijacion PTR-tablero con pijas a cada 150 mm (1500 N/mm c/u) en lugar de fijacion rigida
+    'relleno y entrepano pijas': (dict(con_relleno=True, con_entrepano=True, k_fijacion=K_PIJAS), ELU_ELS),
+    'relleno y entrepano pijas largo plazo': (dict(LP, con_relleno=True, con_entrepano=True,
+                                                   k_fijacion=K_PIJAS / (1 + T['kdef'])), ['ELS G+0.8Q']),
+    'relleno y entrepano cal. 18 pijas': (dict(con_relleno=True, con_entrepano=True, perfil='30x30 cal. 18',
+                                               k_fijacion=K_PIJAS), ELU_ELS),
+    'relleno y entrepano cal. 18 pijas largo plazo': (dict(LP, con_relleno=True, con_entrepano=True,
+                                                           perfil='30x30 cal. 18', k_fijacion=K_PIJAS / (1 + T['kdef'])),
+                                                      ['ELS G+0.8Q']),
     'sismo con anclajes': (dict(anclajes_muro=True), ['SISMO G+0.8Q+H']),
+    'relleno y entrepano cal. 14 pijas': (dict(con_relleno=True, con_entrepano=True, perfil='30x30 cal. 14',
+                                               k_fijacion=K_PIJAS), ELU_ELS),
+    'relleno y entrepano cal. 14 pijas largo plazo': (dict(LP, con_relleno=True, con_entrepano=True,
+                                                           perfil='30x30 cal. 14', k_fijacion=K_PIJAS / (1 + T['kdef'])),
+                                                      ['ELS G+0.8Q']),
+    'relleno y entrepano pijas a 75 mm': (dict(con_relleno=True, con_entrepano=True, k_fijacion=2 * K_PIJAS), ELU_ELS),
+    'relleno y entrepano pijas a 75 mm largo plazo': (dict(LP, con_relleno=True, con_entrepano=True,
+                                                           k_fijacion=2 * K_PIJAS / (1 + T['kdef'])), ['ELS G+0.8Q']),
 }
+# EN 1995-1-1 2.3.2.2(2): cuando el reparto de esfuerzos depende de la rigidez, el estado limite ultimo se revisa
+# tambien con valores finales E/(1 + psi2 kdef), con psi2 de la accion variable principal (almacenamiento)
+FIN = dict(E_tablero=T['E'] / (1 + T['psi2_almacen'] * T['kdef']),
+           k_union=P.K_UNION / (1 + T['psi2_almacen'] * T['kdef']))
+ELU = ['ELU-A1 1.2G+1.6Q', 'ELU-A2 1.4G', 'ELU-T1 1.35G+1.5Q', 'ELU-T2 1.35G']
+for _v in ('base', 'relleno', 'relleno y entrepano', 'relleno y entrepano cal. 18', '30x30 cal. 18', '30x30 cal. 14',
+           'sin tornillos entre maleteros', 'relleno sin tornillos entre maleteros', 'relleno y entrepano pijas',
+           'relleno y entrepano cal. 14 pijas'):
+    _kw = dict(VARIANTES[_v][0], **FIN)
+    if 'k_fijacion' in _kw:
+        _kw['k_fijacion'] = _kw['k_fijacion'] / (1 + T['psi2_almacen'] * T['kdef'])
+    VARIANTES[f'{_v} rigidez final'] = (_kw, ELU)
 X_APOYOS_EXT = (4807.5, 7672.7)
+X_APOYOS_INT = (5412.4, 7067.7)
 
 
 def correr(nombre):
@@ -67,6 +98,7 @@ def correr(nombre):
         D = ptr_diagramas(m, R)
         r['ptr'] = {k: {kk: vv.tolist() for kk, vv in d.items()} for k, d in D.items()}
         r['ptr_flecha_rel'] = {k: flecha_relativa(d, X_APOYOS_EXT) for k, d in D.items()}
+        r['ptr_flecha_rel_central'] = {k: flecha_relativa(d, X_APOYOS_INT) for k, d in D.items()}
         r['apoyos_ptr'] = {f'{k[0]}|{k[1]}': v for k, v in apoyos_ptr(m, R).items()}
         pt, pp = contactos_resumen(m, R)
         r['contactos'] = {'|'.join(k): v for k, v in pt.items()}
@@ -77,10 +109,14 @@ def correr(nombre):
         r['flechas_tableros'] = flechas_tableros(m, R)
         r['desplome_maleteros'] = max(abs(R['desp'][n][1]) for n, it in m.nodo_tablero.items()
                                       if m.tableros[it].grupo.startswith('maletero'))
-        tm = R['tornillos_maleteros']
-        r['tornillos_maleteros'] = dict(
-            n=len(tm), axial_max=max((abs(f[0]) for f in tm), default=0.0),
-            corte_max=max((float(np.hypot(f[1], f[2])) for f in tm), default=0.0))
+        # tornillos entre maleteros: solo la traccion carga al tornillo; en compresion los costados se apoyan
+        tm = [(max(float(f[0]), 0.0), float(np.hypot(f[1], f[2]))) for f in R['tornillos_maleteros']]
+        r['tornillos_maleteros'] = dict(n=len(tm), lista=tm, axial_max=max((a for a, _ in tm), default=0.0),
+                                        corte_max=max((v for _, v in tm), default=0.0))
+        if c.startswith(('ELU-A1', 'ELU-T1', 'ELS G+Q')):
+            r['contactos_nodo'] = [dict(ptr=ptr, tablero=m.tableros[it].nombre, grupo=m.tableros[it].grupo,
+                                        x=float(m.coord[n][0]), y=float(m.coord[n][1]), F=f.tolist())
+                                   for (e, n, it, ptr, x), (_, f) in zip(m.contactos, R['contactos'])]
         if c.startswith('ELU-T') or c.startswith('SISMO'):
             kmod = KMOD.get(c, T['kmod_corto'])
             U, Fv, Fa = uniones_resumen(m, R, kmod)

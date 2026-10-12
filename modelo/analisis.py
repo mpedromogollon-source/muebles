@@ -25,7 +25,7 @@ COMBOS = {
     'ELS G+Q': fac(1.0, 1.0),
     'ELS G+0.8Q': fac(1.0, P.TABLERO['psi2_almacen']),
     'G': fac(1.0, 0.0),
-    'SISMO G+0.8Q+H': dict(fac(1.0, P.TABLERO['psi2_almacen'], ('Q_maleteros', 'Q_torres')), H_sismo=1.0),
+    'SISMO G+0.8Q+H': dict(fac(1.0, P.TABLERO['psi2_almacen']), H_sismo=1.0),
 }
 KMOD = {'ELU-T1 1.35G+1.5Q': P.TABLERO['kmod_largo'], 'ELU-T2 1.35G': P.TABLERO['kmod_permanente']}
 
