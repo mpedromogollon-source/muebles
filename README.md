@@ -46,10 +46,10 @@ genera `ejecutar.py`.
   uno de esos apoyos, el lateral interior de cada torre ("lateral aire"), no llega al piso
   (hueco de 205 mm) y cede porque cuelga de tornillos al tablero trasero.
 * Tal como está diseñado, el mueble no cumple con ningún calibre (18, 16 o 14): la flecha del
-  frente queda entre L/112 y L/121 a largo plazo, el tablero trasero de las torres y sus uniones
+  frente queda entre L/101 y L/110 a largo plazo, el tablero trasero de las torres y sus uniones
   se sobrecargan y los laterales exteriores se pandean con la carga sostenida.
 * Solución recomendada: relleno de 15 mm (585 x 205 mm) bajo cada lateral aire, entrepaño fijo
-  intermedio a 1120 mm en cada torre, suplemento de canto de 15 mm en la parte alta de cada
-  lateral aire, tubo cal. 14 fijado con pijas a cada 150 mm, maleteros unidos con tornillos
-  pasantes y anclaje al muro. Con fijación realista por pijas el cal. 16 queda al límite de la
-  flecha del tramo central y el cal. 18 no cumple.
+  intermedio a 1120 mm en cada torre, suplemento de canto de 15 mm en la cara de cada lateral
+  aire que da al hueco central, tubo cal. 14 fijado con pijas a cada 150 mm, maleteros unidos con
+  tornillos pasantes M6 y anclaje al muro. La flecha del tramo central queda entre L/307 y L/322
+  según la rigidez real de las pijas; el cal. 16 y el cal. 18 no la cumplen.

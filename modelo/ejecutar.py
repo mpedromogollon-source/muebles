@@ -27,6 +27,7 @@ ELU_ELS = ['ELU-A1 1.2G+1.6Q', 'ELU-A2 1.4G', 'ELU-T1 1.35G+1.5Q', 'ELU-T2 1.35G
 
 PTR_ELU_ELS = ['ELU-A1 1.2G+1.6Q', 'ELU-A2 1.4G', 'ELS G+Q', 'ELS G+0.8Q']
 K_PIJAS = 1500.0 / 150.0   # N/mm por mm de PTR
+K_SIN_CONJUNTA = 0.2       # N/mm por mm: solo estabiliza el modelo, sin accion conjunta tubo-tablero
 
 VARIANTES = {
     'base': (dict(), ELU_ELS),
@@ -66,6 +67,11 @@ VARIANTES = {
              k_fijacion=P.PIJA['Kser'] / s_ / ((1 + T['kdef']) if lp else 1.0), **(LP if lp else {})),
         ['ELS G+0.8Q'] if lp else ELU_ELS)
        for c, cal in (('', 16), (' cal. 14', 14)) for s_ in (150.0, 75.0) for lp in ('', ' largo plazo')},
+    # sin accion conjunta: pijas en agujeros ovalados que fijan la posicion pero no transmiten cortante
+    **{f'relleno y entrepano{c} sin accion conjunta{lp}': (
+        dict(con_relleno=True, con_entrepano=True, perfil=f'30x30 cal. {cal}', k_fijacion=K_SIN_CONJUNTA,
+             **(LP if lp else {})), ['ELS G+0.8Q'] if lp else ELU_ELS)
+       for c, cal in (('', 16), (' cal. 14', 14)) for lp in ('', ' largo plazo')},
     'relleno y entrepano cal. 14 pijas': (dict(con_relleno=True, con_entrepano=True, perfil='30x30 cal. 14',
                                                k_fijacion=K_PIJAS), ELU_ELS),
     'relleno y entrepano cal. 14 pijas largo plazo': (dict(LP, con_relleno=True, con_entrepano=True,

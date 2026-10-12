@@ -23,7 +23,8 @@ LIM_REPISA = 200                     # L/200 largo plazo
 VARS = ('base', 'relleno', 'relleno y entrepano')
 VARS_PERFIL = ('30x30 cal. 18', '30x30 cal. 14', 'PTR 3x3 pulg')
 VARS_EXTRA = ('sin tornillos entre maleteros', 'relleno sin tornillos entre maleteros', 'relleno y entrepano cal. 18')
-VARS_PIJAS = ('relleno y entrepano pijas', 'relleno y entrepano cal. 18 pijas', 'relleno y entrepano cal. 14 pijas',
+VARS_PIJAS = ('relleno y entrepano sin accion conjunta', 'relleno y entrepano cal. 14 sin accion conjunta',
+              'relleno y entrepano pijas', 'relleno y entrepano cal. 18 pijas', 'relleno y entrepano cal. 14 pijas',
               'relleno y entrepano pijas a 75 mm', 'relleno y entrepano kser a 150 mm', 'relleno y entrepano kser a 75 mm',
               'relleno y entrepano cal. 14 kser a 150 mm', 'relleno y entrepano cal. 14 kser a 75 mm')
 
