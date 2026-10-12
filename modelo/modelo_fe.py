@@ -1,4 +1,4 @@
-"""Modelo 3D de elementos finitos del closet con dos PTR 3x3 bajo los maleteros.
+"""Modelo 3D de elementos finitos del closet con dos PTR bajo los maleteros (base: 30 x 30 mm).
 
 Idealizacion
   * Cada tablero de 15 mm es un cascaron ShellMITC4 en su plano medio (ASDShellQ4
@@ -10,7 +10,7 @@ Idealizacion
     contra una cara.
   * Tableros paralelos atornillados cara a cara (entrepanos sobre amarres, maleteros
     contiguos) se unen con resortes twoNodeLink.
-  * Los PTR son vigas elasticas 3D en su eje centroidal (z = 1570 + 38.1 mm).
+  * Los PTR son vigas elasticas 3D en su eje centroidal (z = 1570 + lado/2).
   * Contacto PTR-tablero: brazo rigido desde la viga y resorte solo a compresion en
     vertical (el mueble descansa sobre el PTR); en horizontal, resorte de fijacion.
   * Base del zocalo articulada en el piso.
@@ -65,10 +65,9 @@ class Tablero:
         return f'{self.nombre} ({self.grupo})'
 
 
-def cargar_piezas(con_relleno=False, con_entrepano=False):
+def cargar_piezas(con_relleno=False, con_entrepano=False, dz=P.LADO_BASE):
     datos = json.load(open(os.path.join(RAIZ, 'datos', 'piezas_closet.json'), encoding='utf-8'))
     tableros, extras = [], []
-    dz = P.PTR_LADO
     for pz in datos['piezas']:
         if pz['nombre'].startswith(EXCLUIDAS):
             continue
@@ -164,22 +163,25 @@ def malla_global(tableros, extras_y=(), h=P.H_MALLA):
 
 
 class Modelo:
-    def __init__(self, calibre=P.PTR_CALIBRE_BASE, con_relleno=False, E_tablero=P.TABLERO['E'],
+    def __init__(self, perfil=P.PERFIL_BASE, con_relleno=False, E_tablero=P.TABLERO['E'],
                  k_union=P.K_UNION, anclajes_muro=False, unilateral=True, no_lineal_geom=False,
-                 con_entrepano=False):
-        self.calibre = calibre
-        self.ptr = ptr_cuadrado(P.PTR_LADO, P.PTR_CALIBRES[calibre])
+                 con_entrepano=False, tornillos_maleteros=True):
+        self.perfil = perfil
+        self.B, t = P.perfil_diseno(perfil)
+        self.ptr = ptr_cuadrado(self.B, t)
+        self.y_ptr = P.huellas_ptr(self.B)
         self.con_relleno = con_relleno
         self.E = E_tablero
         self.k_union = k_union
         self.anclajes_muro = anclajes_muro
         self.unilateral = unilateral
         self.no_lineal_geom = no_lineal_geom
+        self.tornillos_maleteros = tornillos_maleteros
         self.tipo_shell = 'ASDShellQ4' if no_lineal_geom else 'ShellMITC4'
-        self.tableros, self.extras = cargar_piezas(con_relleno, con_entrepano)
+        self.tableros, self.extras = cargar_piezas(con_relleno, con_entrepano, dz=self.B)
         ajustar_planos_medios(self.tableros)
-        yp = [P.PTR_Y_FRENTE[0], sum(P.PTR_Y_FRENTE) / 2, P.PTR_Y_FRENTE[1],
-              P.PTR_Y_FONDO[0], sum(P.PTR_Y_FONDO) / 2]
+        hf, hb = self.y_ptr['frente'], self.y_ptr['fondo']
+        yp = [hf[0], sum(hf) / 2, hf[1], hb[0], sum(hb) / 2]
         self.G = malla_global(self.tableros, extras_y=yp)
         self.construir()
 
@@ -300,6 +302,8 @@ class Modelo:
                          if (round(self.coord[n][b], 1), round(self.coord[n][c], 1)) in qn]
                 if not pares:
                     continue
+                if p.grupo != q.grupo and not self.tornillos_maleteros:
+                    continue
                 if p.grupo != q.grupo:          # maleteros contiguos: 4 tornillos
                     obj = [(y, z) for y in (-55.0, 437.0) for z in (min(p.hi[2], q.hi[2]) - 100.0,
                                                                      max(p.lo[2], q.lo[2]) + 100.0)]
@@ -343,12 +347,12 @@ class Modelo:
         pr = self.ptr
         Ac = P.ACERO
         ops.geomTransf('Corotational' if self.no_lineal_geom else 'Linear', 1, 0.0, 0.0, 1.0)
-        zc = P.Z_TOPE_TORRES + P.PTR_LADO / 2
+        zc = P.Z_TOPE_TORRES + self.B / 2
         gx = self.G[0][(self.G[0] >= P.PTR_X[0] - 1e-6) & (self.G[0] <= P.PTR_X[1] + 1e-6)]
         self.ptr_nodos = {}
         self.ptr_elems = {}
         self.ptr_x = gx
-        for nombre, (y0, y1) in (('frente', P.PTR_Y_FRENTE), ('fondo', P.PTR_Y_FONDO)):
+        for nombre, (y0, y1) in self.y_ptr.items():
             yc = 0.5 * (y0 + y1)
             nod = []
             for x in gx:
@@ -375,7 +379,7 @@ class Modelo:
             mz = mk
         z_torre = self._nivel_contacto('torre')
         z_mal = self._nivel_contacto('maletero')
-        for nombre, (y0, y1) in (('frente', P.PTR_Y_FRENTE), ('fondo', P.PTR_Y_FONDO)):
+        for nombre, (y0, y1) in self.y_ptr.items():
             yc = 0.5 * (y0 + y1)
             ya_unidos = set()
             # primero cantos de tableros verticales, despues tableros horizontales
@@ -584,6 +588,10 @@ class Modelo:
         R['desp'] = {n: np.array(ops.nodeDisp(n)[:3]) for n in self.coord}
         R['uniones'] = [(e, np.array(ops.eleResponse(e, 'force')[:3])) for e, *_ in self.uniones]
         R['contactos'] = [(e, np.array(ops.eleResponse(e, 'force')[:3])) for e, *_ in self.contactos]
+        # fuerza global en el nodo i; los costados son normales a x, por eso x es el axial del tornillo
+        R['tornillos_maleteros'] = [np.array(ops.eleResponse(e, 'force')[:3])
+                                    for e, n0, n1, i, j in self.uniones_cara
+                                    if self.tableros[i].grupo != self.tableros[j].grupo]
         R['ptr'] = {}
         for nombre, els in self.ptr_elems.items():
             R['ptr'][nombre] = [np.array(ops.eleResponse(e, 'localForce')) for e in els]

@@ -229,7 +229,7 @@ def flechas_tableros(m, R):
         uz = {tuple(np.round(m.coord[n], 1)): R['desp'][n][2] for n in tb.nodos.values()}
         if tb.nombre == 'MALEST-MA':
             # entre las lineas de apoyo de los dos PTR
-            yf, yb = sum(P.PTR_Y_FRENTE) / 2, sum(P.PTR_Y_FONDO) / 2
+            yf, yb = sum(m.y_ptr['frente']) / 2, sum(m.y_ptr['fondo']) / 2
             best, claro = 0.0, yb - yf
             for x in tb.gb:
                 col = {round(k[1], 1): v for k, v in uz.items() if abs(k[0] - x) < 0.1}

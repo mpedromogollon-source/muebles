@@ -24,6 +24,8 @@ T = P.TABLERO
 LP = dict(E_tablero=T['E'] / (1 + T['kdef']), k_union=P.K_UNION / (1 + T['kdef']))
 ELU_ELS = ['ELU-A1 1.2G+1.6Q', 'ELU-A2 1.4G', 'ELU-T1 1.35G+1.5Q', 'ELU-T2 1.35G', 'ELS G+Q', 'ELS G+0.8Q']
 
+PTR_ELU_ELS = ['ELU-A1 1.2G+1.6Q', 'ELU-A2 1.4G', 'ELS G+Q', 'ELS G+0.8Q']
+
 VARIANTES = {
     'base': (dict(), ELU_ELS),
     'base largo plazo': (LP, ['ELS G+0.8Q']),
@@ -31,8 +33,21 @@ VARIANTES = {
     'relleno largo plazo': (dict(LP, con_relleno=True), ['ELS G+0.8Q']),
     'relleno y entrepano': (dict(con_relleno=True, con_entrepano=True), ELU_ELS),
     'relleno y entrepano largo plazo': (dict(LP, con_relleno=True, con_entrepano=True), ['ELS G+0.8Q']),
+    '30x30 cal. 18': (dict(perfil='30x30 cal. 18'), PTR_ELU_ELS),
+    '30x30 cal. 18 largo plazo': (dict(LP, perfil='30x30 cal. 18'), ['ELS G+0.8Q']),
+    '30x30 cal. 14': (dict(perfil='30x30 cal. 14'), PTR_ELU_ELS),
+    '30x30 cal. 14 largo plazo': (dict(LP, perfil='30x30 cal. 14'), ['ELS G+0.8Q']),
+    'PTR 3x3 pulg': (dict(perfil='3"x3" cal. 14'), PTR_ELU_ELS),
+    'PTR 3x3 pulg largo plazo': (dict(LP, perfil='3"x3" cal. 14'), ['ELS G+0.8Q']),
+    'relleno y entrepano cal. 18': (dict(con_relleno=True, con_entrepano=True, perfil='30x30 cal. 18'), ELU_ELS),
+    'relleno y entrepano cal. 18 largo plazo': (dict(LP, con_relleno=True, con_entrepano=True, perfil='30x30 cal. 18'),
+                                                ['ELS G+0.8Q']),
+    'sin tornillos entre maleteros': (dict(tornillos_maleteros=False), ELU_ELS),
+    'sin tornillos entre maleteros largo plazo': (dict(LP, tornillos_maleteros=False), ['ELS G+0.8Q']),
+    'relleno sin tornillos entre maleteros': (dict(con_relleno=True, tornillos_maleteros=False), ELU_ELS),
+    'relleno sin tornillos entre maleteros largo plazo': (dict(LP, con_relleno=True, tornillos_maleteros=False),
+                                                          ['ELS G+0.8Q']),
     'uniones rigidas': (dict(k_union=10 * P.K_UNION), ['ELU-A1 1.2G+1.6Q', 'ELS G+Q']),
-    'PTR cal. 11': (dict(calibre='cal. 11'), ['ELU-A1 1.2G+1.6Q', 'ELS G+Q']),
     'sismo con anclajes': (dict(anclajes_muro=True), ['SISMO G+0.8Q+H']),
 }
 X_APOYOS_EXT = (4807.5, 7672.7)
@@ -43,7 +58,7 @@ def correr(nombre):
     kw, combos = VARIANTES[nombre]
     t0 = time.time()
     m = Modelo(**kw)
-    out = dict(variante=nombre, kw=kw, malla=resumen_malla(m), combos={})
+    out = dict(variante=nombre, kw=kw, perfil=m.perfil, B=m.B, malla=resumen_malla(m), combos={})
     for c in combos:
         R = m.resolver(m.cargas_combinadas(COMBOS[c]))
         r = dict(iteraciones=m.iteraciones, reac_base=R['reac_base'].tolist(),
@@ -60,6 +75,12 @@ def correr(nombre):
             clave = f'{ptr}|{lado}'
             r['contacto_max_punto'][clave] = max(r['contacto_max_punto'].get(clave, 0.0), f)
         r['flechas_tableros'] = flechas_tableros(m, R)
+        r['desplome_maleteros'] = max(abs(R['desp'][n][1]) for n, it in m.nodo_tablero.items()
+                                      if m.tableros[it].grupo.startswith('maletero'))
+        tm = R['tornillos_maleteros']
+        r['tornillos_maleteros'] = dict(
+            n=len(tm), axial_max=max((abs(f[0]) for f in tm), default=0.0),
+            corte_max=max((float(np.hypot(f[1], f[2])) for f in tm), default=0.0))
         if c.startswith('ELU-T') or c.startswith('SISMO'):
             kmod = KMOD.get(c, T['kmod_corto'])
             U, Fv, Fa = uniones_resumen(m, R, kmod)

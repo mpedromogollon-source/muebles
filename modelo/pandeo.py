@@ -65,7 +65,13 @@ def barrido(nombre, kw, combo, lam_max=4.0, dlam=0.5, parcial=None):
 
     curva = []
     lam = 0.0
+    import time
+    t0 = time.time()
+    nota = None
     while lam < lam_max - 1e-9:
+        if time.time() - t0 > T_MAX_CASO:
+            nota = 'detenido por tiempo de calculo sin perdida de estabilidad'
+            break
         ok = ops.analyze(1)
         if ok != 0:
             ops.integrator('LoadControl', dlam / 4)
@@ -91,10 +97,14 @@ def barrido(nombre, kw, combo, lam_max=4.0, dlam=0.5, parcial=None):
     campo = {t.nombre + '|' + t.grupo: dict(xyz=[m.coord[n].tolist() for n in t.nodos.values()],
                                             u=[ops.nodeDisp(n)[:3] for n in t.nodos.values()])
              for t in m.tableros if t.grupo.startswith('torre')}
-    return dict(variante=nombre, combo=combo, curva=curva, lambda_ultimo=lam,
-                convergio_hasta_max=lam >= lam_max - 1e-9, campo_final=campo)
+    out = dict(variante=nombre, combo=combo, curva=curva, lambda_ultimo=lam,
+               convergio_hasta_max=lam >= lam_max - 1e-9, campo_final=campo)
+    if nota:
+        out['nota'] = nota
+    return out
 
 
+T_MAX_CASO = 50 * 60      # s por caso; si se alcanza sin divergencia se reporta como cota inferior
 T = P.TABLERO
 LP = dict(E_tablero=T['E'] / (1 + T['kdef']), k_union=P.K_UNION / (1 + T['kdef']))
 CASOS = [

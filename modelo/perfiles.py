@@ -4,13 +4,14 @@ import math
 import numpy as np
 
 
-def ptr_cuadrado(B, t, r_ext=None, paso=0.04):
+def ptr_cuadrado(B, t, r_ext=None, paso=None):
     """Propiedades de un tubo cuadrado de lado B y pared t (mm).
 
     El radio exterior de esquina se toma 2t (AISC usa 1.5t a 2t). A, I, Z se
     integran numericamente sobre una reticula; J y Cw por formulas de pared delgada.
     """
     r_ext = 2.0 * t if r_ext is None else r_ext
+    paso = t / 40 if paso is None else paso          # el espesor queda en un numero entero de celdas
     r_int = max(r_ext - t, 0.0)
     n = int(round(B / paso))
     c = (np.arange(n) + 0.5) * paso - B / 2
@@ -38,9 +39,10 @@ def ptr_cuadrado(B, t, r_ext=None, paso=0.04):
 
 
 if __name__ == '__main__':
-    from parametros import PTR_CALIBRES, PTR_LADO
-    for nom, t in PTR_CALIBRES.items():
-        p = ptr_cuadrado(PTR_LADO, t)
-        print(f"{nom:8s} t={t:5.3f}  A={p['A']/100:6.2f} cm2  I={p['I']/1e4:6.1f} cm4  "
+    from parametros import PERFILES, perfil_diseno
+    for nom in PERFILES:
+        B, t = perfil_diseno(nom)
+        p = ptr_cuadrado(B, t)
+        print(f"{nom:14s} t={t:5.3f}  A={p['A']/100:6.2f} cm2  I={p['I']/1e4:6.1f} cm4  "
               f"S={p['S']/1e3:5.2f} cm3  Z={p['Z']/1e3:5.2f} cm3  J={p['J']/1e4:6.1f} cm4  "
               f"{p['masa_kg_m']:.2f} kg/m")

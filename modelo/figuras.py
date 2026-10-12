@@ -16,6 +16,11 @@ from matplotlib.patches import FancyArrowPatch, Rectangle  # noqa: E402
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection  # noqa: E402
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import parametros as P  # noqa: E402
+
+B_PTR = P.LADO_BASE
+Z_MAL = P.Z_TOPE_TORRES + B_PTR
+ETQ_PTR = f'PTR {B_PTR:.0f} x {B_PTR:.0f} mm'
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(RAIZ, 'resultados')
@@ -70,7 +75,7 @@ def fig_modelo(campo):
         xyz = np.array(d['xyz'])
         ax.plot(xyz[:, 0], xyz[:, 1], xyz[:, 2], color=S2, lw=3.2, solid_capstyle='butt')
     _ejes_3d(ax, [(4750, 7730), (-150, 550), (0, 2560)])
-    ax.text(6240, -160, 1500, 'PTR 3"x3" frontal', color=TXT, fontsize=8, ha='center')
+    ax.text(6240, -160, 1500, f'{ETQ_PTR} frontal', color=TXT, fontsize=8, ha='center')
     ax.text(4800, 500, 2650, 'maleteros (3 x 960 mm)', color=TXT2, fontsize=8)
     ax.text(4700, -150, 300, 'torre izq.', color=TXT2, fontsize=8)
     ax.text(7500, -150, 300, 'torre der.', color=TXT2, fontsize=8)
@@ -131,7 +136,7 @@ def fig_ptr(res):
 
 def fig_reparto(res):
     elems = ['lateral exterior', 'lateral aire', 'trasero 15 mm', 'travesano superior']
-    var = [('base', 'proyecto'), ('uniones rigidas', 'uniones 10x mas rigidas'), ('relleno', 'con relleno')]
+    var = [('base', 'proyecto'), ('uniones rigidas', 'uniones 10 veces más rígidas'), ('relleno', 'con relleno')]
     fig, axs = plt.subplots(1, 2, figsize=(9.5, 3.4), sharey=True)
     for j, ptr in enumerate(('frente', 'fondo')):
         w = 0.26
@@ -173,32 +178,32 @@ def fig_esquema():
         ax.add_patch(Rectangle((aire - x0 - 2, 465), 19, 205, facecolor='none', edgecolor=S2, lw=1.4, hatch='////'))
         for z, t in ((170, 'cajones'), (1100, 'puerta')):
             ax.text(xt - x0 + 310, z, t, ha='center', va='center', fontsize=7, color=TXT2)
-    ax.add_patch(Rectangle((0, 1570), 2880, 76.2, facecolor=S2, edgecolor='#52514e', lw=0.7))
+    ax.add_patch(Rectangle((0, 1570), 2880, B_PTR, facecolor=S2, edgecolor='#52514e', lw=0.7))
     for i in range(3):
         xa = i * 960
-        ax.add_patch(Rectangle((xa, 1646.2), 960, 870, facecolor='none', edgecolor='#52514e', lw=0.9))
-        ax.add_patch(Rectangle((xa, 1646.2), 15, 870, **gris))
-        ax.add_patch(Rectangle((xa + 945, 1646.2), 15, 870, **gris))
-        ax.add_patch(Rectangle((xa + 15, 1646.2), 930, 15, **gris))
-        ax.add_patch(Rectangle((xa + 15, 2501.2), 930, 15, **gris))
-        ax.text(xa + 480, 2080, f'maletero {i + 1}\n960 x 870 x 600', ha='center', va='center', fontsize=8, color=TXT)
+        ax.add_patch(Rectangle((xa, Z_MAL), 960, 870, facecolor='none', edgecolor='#52514e', lw=0.9))
+        ax.add_patch(Rectangle((xa, Z_MAL), 15, 870, **gris))
+        ax.add_patch(Rectangle((xa + 945, Z_MAL), 15, 870, **gris))
+        ax.add_patch(Rectangle((xa + 15, Z_MAL), 930, 15, **gris))
+        ax.add_patch(Rectangle((xa + 15, Z_MAL + 855), 930, 15, **gris))
+        ax.text(xa + 480, Z_MAL + 435, f'maletero {i + 1}\n960 x 870 x 600', ha='center', va='center', fontsize=8, color=TXT)
         for xs in (xa + 7.5, xa + 952.5):
-            ax.add_patch(FancyArrowPatch((xs, 1900), (xs, 1660), arrowstyle='-|>', mutation_scale=8, color=S1, lw=1.0))
-    ax.text(1440, 1608, 'PTR 3"x3" (frente y fondo), L = 2880 mm', ha='center', va='center', fontsize=8,
+            ax.add_patch(FancyArrowPatch((xs, Z_MAL + 250), (xs, Z_MAL + 15), arrowstyle='-|>', mutation_scale=8, color=S1, lw=1.0))
+    ax.text(1440, 1520, f'{ETQ_PTR} (frente y fondo), L = 2880 mm', ha='center', va='center', fontsize=8,
             color=TXT, fontweight='bold')
     # cotas
     def cota_h(xa, xb, z, txt):
         ax.annotate('', (xa, z), (xb, z), arrowprops=dict(arrowstyle='<->', color=TXT2, lw=0.7))
         ax.text(0.5 * (xa + xb), z + 25, txt, ha='center', fontsize=7.5, color=TXT2)
-    cota_h(620, 2260, 1300, 'hueco central 1640 mm')
-    cota_h(7.5, 2872.5, 2620, 'claro efectivo del PTR frontal en el proyecto: 2865 mm (entre laterales exteriores)')
-    cota_h(612.5, 2267.5, 1460, 'claro con relleno: 1655 mm (entre laterales aire)')
+    cota_h(620, 2260, 1240, 'hueco central 1640 mm')
+    cota_h(7.5, 2872.5, Z_MAL + 960, 'PTR entre laterales exteriores: 2865 mm')
+    cota_h(612.5, 2267.5, 1390, 'PTR entre laterales aire: 1655 mm')
     ax.text(700, 560, 'hueco de 205 mm\nsin tablero bajo\nel lateral aire', fontsize=7.5, color=S2, va='center')
     ax.text(2260 - 15, 560, 'hueco de 205 mm', fontsize=7.5, color=S2, va='center', ha='right')
     ax.text(625, 1000, 'lateral aire\n900 mm', fontsize=7, color=TXT, va='center')
     ax.text(-20, 800, 'lateral exterior\n1455 mm', fontsize=7, color=TXT, va='center', ha='right')
     ax.set_xlim(-330, 3000)
-    ax.set_ylim(-60, 2700)
+    ax.set_ylim(-60, Z_MAL + 1060)
     ax.set_title('Alzado frontal esquemático (mm). Maleteros sobre PTR y torres', loc='left')
     return guardar(fig, 'fig03_esquema_alzado.png')
 

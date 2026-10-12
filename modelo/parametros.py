@@ -2,8 +2,6 @@
 
 Unidades: N, mm, MPa (N/mm2) salvo indicacion.
 """
-import math
-
 GRAV = 9.81  # m/s2, para pasar kg a N
 
 # Tablero de particulas melaminico 15 mm (calidad interior tipo EN 312 P2).
@@ -31,17 +29,38 @@ TABLERO = dict(
 # grado; un ASTM A500 Gr. B (Fy = 317 MPa) da resistencias mayores.
 ACERO = dict(E=200000.0, G=77200.0, Fy=250.0, Fu=400.0, densidad=7850.0)
 
-# PTR 3"x3" (76.2 mm). Calibres comerciales en Mexico (espesor de pared, mm).
-PTR_LADO = 76.2
-PTR_CALIBRES = {'cal. 14': 1.897, 'cal. 12': 2.657, 'cal. 11': 3.038, '3/16"': 4.763}
-PTR_CALIBRE_BASE = 'cal. 14'
+# Perfiles tubulares cuadrados: (lado, espesor de pared) en mm.
+# El cliente indica PTR de 3 x 3 cm. El calibre no se conoce: se toma cal. 16 como base
+# y se revisan cal. 18 y cal. 14. El 3"x3" se conserva solo como alternativa de comparacion.
+PERFILES = {
+    '30x30 cal. 18': (30.0, 1.214),
+    '30x30 cal. 16': (30.0, 1.519),
+    '30x30 cal. 14': (30.0, 1.897),
+    '3"x3" cal. 14': (76.2, 1.897),
+}
+PERFIL_BASE = '30x30 cal. 16'
+LADO_BASE = PERFILES[PERFIL_BASE][0]
+# AISC 360-16 B4.2: espesor de diseno 0.93 t nominal para tubo soldado (ERW) que no es
+# ASTM A1085, como el PTR comercial (A500 / NMX-B-199). Se usa en resistencia y rigidez.
+FACTOR_ESPESOR = 0.93
+
+
+def perfil_diseno(nombre):
+    """(lado, espesor de diseno) del perfil indicado."""
+    lado, t_nom = PERFILES[nombre]
+    return lado, FACTOR_ESPESOR * t_nom
 
 # Posicion de los PTR: a paño frontal y a paño trasero del mueble, longitud total
-# 2880 mm, apoyados sobre las torres; los maleteros se elevan 76.2 mm.
+# 2880 mm, apoyados sobre las torres; los maleteros se elevan el lado del PTR.
 PTR_X = (4800.0, 7680.0)
-PTR_Y_FRENTE = (-105.2, -105.2 + PTR_LADO)
-PTR_Y_FONDO = (494.8 - PTR_LADO, 494.8)
 Z_TOPE_TORRES = 1570.0
+Y_FRENTE_MUEBLE, Y_FONDO_MUEBLE = -105.2, 494.8
+
+
+def huellas_ptr(lado):
+    """Rango en y de cada PTR (frente y fondo) para un lado dado."""
+    return {'frente': (Y_FRENTE_MUEBLE, Y_FRENTE_MUEBLE + lado), 'fondo': (Y_FONDO_MUEBLE - lado, Y_FONDO_MUEBLE)}
+
 
 # Cargas variables adoptadas (uso de almacenamiento domestico).
 CARGAS = dict(
@@ -75,5 +94,3 @@ def peso_tablero_N_mm2():
     t = TABLERO
     return t['densidad'] * GRAV * t['espesor'] * 1e-9 * t['recargo_herrajes']
 
-
-assert math.isclose(PTR_LADO, 3 * 25.4)
