@@ -7220,9 +7220,9 @@
     }
    ],
    "lambda_ultimo": 3.15625,
+   "paso_falla": 0.03125,
    "convergio_hasta_max": false,
-   "campo_final": null,
-   "parcial": true
+   "nota": "detenido por tiempo de calculo sin perdida de estabilidad"
   },
   {
    "variante": "proyecto, largo plazo E_fin",
@@ -7395,9 +7395,9 @@
     }
    ],
    "lambda_ultimo": 1.84375,
+   "paso_falla": 0.03125,
    "convergio_hasta_max": false,
-   "campo_final": null,
-   "parcial": true
+   "nota": "detenido por tiempo de calculo sin perdida de estabilidad"
   },
   {
    "variante": "con relleno, ELU con E/gamma_M",
@@ -7570,9 +7570,9 @@
     }
    ],
    "lambda_ultimo": 2.03125,
+   "paso_falla": 0.03125,
    "convergio_hasta_max": false,
-   "campo_final": null,
-   "parcial": true
+   "nota": "detenido por tiempo de calculo sin perdida de estabilidad"
   },
   {
    "variante": "con relleno, largo plazo E_fin",
@@ -7730,9 +7730,9 @@
     }
    ],
    "lambda_ultimo": 1.34375,
+   "paso_falla": 0.03125,
    "convergio_hasta_max": false,
-   "campo_final": null,
-   "parcial": true
+   "nota": "detenido por tiempo de calculo sin perdida de estabilidad"
   },
   {
    "variante": "relleno y entrepaño, ELU con E/gamma_M",
@@ -7860,9 +7860,8 @@
     }
    ],
    "lambda_ultimo": 4.0,
-   "convergio_hasta_max": false,
-   "campo_final": null,
-   "parcial": true
+   "paso_falla": 0.03125,
+   "convergio_hasta_max": true
   },
   {
    "variante": "relleno y entrepaño, largo plazo E_fin",
@@ -7987,12 +7986,87 @@
      "flecha_ptr": -20.631319703889684,
      "abombamiento_global": 3.14416402426386,
      "pieza_global": "MALEST-MI (maletero 2)"
+    },
+    {
+     "lam": 2.906,
+     "abombamiento_lateral": 2.4803995496300546,
+     "donde": [
+      4807.0,
+      -105.0,
+      765.0
+     ],
+     "pieza": "ESPCL-LD-02 (torre izq)",
+     "abombamiento_trasero": 3.1118016720132182,
+     "desplome": 23.291875918708847,
+     "flecha_ptr": -20.86040219190038,
+     "abombamiento_global": 3.1803817876261533,
+     "pieza_global": "MALEST-MI (maletero 2)"
+    },
+    {
+     "lam": 2.938,
+     "abombamiento_lateral": 2.513828438197216,
+     "donde": [
+      4807.0,
+      -105.0,
+      765.0
+     ],
+     "pieza": "ESPCL-LD-02 (torre izq)",
+     "abombamiento_trasero": 3.1469183320195016,
+     "desplome": 23.55069352723789,
+     "flecha_ptr": -21.089696859927844,
+     "abombamiento_global": 3.216695469247256,
+     "pieza_global": "MALEST-MI (maletero 2)"
+    },
+    {
+     "lam": 2.969,
+     "abombamiento_lateral": 2.547495692654193,
+     "donde": [
+      4807.0,
+      -105.0,
+      765.0
+     ],
+     "pieza": "ESPCL-LD-02 (torre izq)",
+     "abombamiento_trasero": 3.1821150972689174,
+     "desplome": 23.80985030465692,
+     "flecha_ptr": -21.31924906344616,
+     "abombamiento_global": 3.2528198396701313,
+     "pieza_global": "MALEST-MI (maletero 2)"
+    },
+    {
+     "lam": 3.0,
+     "abombamiento_lateral": 2.581452625934858,
+     "donde": [
+      4807.0,
+      -105.0,
+      765.0
+     ],
+     "pieza": "ESPCL-LD-02 (torre izq)",
+     "abombamiento_trasero": 3.217418449255395,
+     "desplome": 24.06931179003532,
+     "flecha_ptr": -21.549109829774025,
+     "abombamiento_global": 3.2884660086157496,
+     "pieza_global": "MALEST-MI (maletero 2)"
+    },
+    {
+     "lam": 3.031,
+     "abombamiento_lateral": 2.61562412045687,
+     "donde": [
+      4807.0,
+      -105.0,
+      765.0
+     ],
+     "pieza": "ESPCL-LD-02 (torre izq)",
+     "abombamiento_trasero": 3.2527915378998156,
+     "desplome": 24.329299975237657,
+     "flecha_ptr": -21.779277500357892,
+     "abombamiento_global": 3.324246709633294,
+     "pieza_global": "MALEST-MI (maletero 2)"
     }
    ],
-   "lambda_ultimo": 2.875,
+   "lambda_ultimo": 3.03125,
+   "paso_falla": 0.03125,
    "convergio_hasta_max": false,
-   "campo_final": null,
-   "parcial": true
+   "nota": "detenido por tiempo de calculo sin perdida de estabilidad"
   }
  ]
 }
