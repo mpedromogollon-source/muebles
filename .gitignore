@@ -1,0 +1,4 @@
+resultados/resultados.pkl
+__pycache__/
+*.pyc
+resultados/pandeo_parcial_*.json

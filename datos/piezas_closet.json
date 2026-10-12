@@ -1,0 +1,1986 @@
+{
+ "fuente": "datos/origen/closet_pedido_mx.skp",
+ "unidades": "mm",
+ "piezas": [
+  {
+   "nombre": "lateral aire#1",
+   "ruta": "lateral aire#1",
+   "min": [
+    7060.2,
+    -105.2,
+    670.0
+   ],
+   "max": [
+    7075.2,
+    479.8,
+    1570.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    585.0,
+    900.0
+   ]
+  },
+  {
+   "nombre": "PTRSOP022",
+   "ruta": "DIVISIONES-CON-TOPE-Y-AMARRES#2/PTR0101#2/PTRSOP01#2/PTRSOP022",
+   "min": [
+    7075.2,
+    379.8,
+    670.0
+   ],
+   "max": [
+    7665.2,
+    479.8,
+    685.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    590.0,
+    100.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "PTRSOP0-125",
+   "ruta": "DIVISIONES-CON-TOPE-Y-AMARRES#2/PTR0101#2/PTRSOP01#2/PTRSOP0-125",
+   "min": [
+    7075.2,
+    -105.2,
+    670.0
+   ],
+   "max": [
+    7665.2,
+    -5.2,
+    685.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    590.0,
+    100.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "PTRSOP024-TO",
+   "ruta": "DIVISIONES-CON-TOPE-Y-AMARRES#2/PTR0101#2/PTRSOP01#2/PTRSOP024-TO",
+   "min": [
+    7075.2,
+    -105.2,
+    685.0
+   ],
+   "max": [
+    7665.2,
+    479.8,
+    700.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    590.0,
+    585.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "GH-FRENTE-0003#4",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GH-FRENTE-0003#4",
+   "min": [
+    7061.2,
+    -120.2,
+    100.0
+   ],
+   "max": [
+    7679.2,
+    -105.2,
+    273.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    618.0,
+    15.0,
+    173.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-DE-0004#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GH-LATERAL-DE-0004#3",
+   "min": [
+    7637.2,
+    -90.2,
+    125.0
+   ],
+   "max": [
+    7652.2,
+    449.8,
+    253.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    540.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-IZ-0005#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GH-LATERAL-IZ-0005#3",
+   "min": [
+    7088.2,
+    -90.2,
+    125.0
+   ],
+   "max": [
+    7103.2,
+    449.8,
+    253.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    540.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-FRENTE-0006#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GH-LATERAL-FRENTE-0006#3",
+   "min": [
+    7088.2,
+    -105.2,
+    125.0
+   ],
+   "max": [
+    7652.2,
+    -90.2,
+    253.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    564.0,
+    15.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-ATRAS-0007#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GH-LATERAL-ATRAS-0007#3",
+   "min": [
+    7088.2,
+    449.8,
+    125.0
+   ],
+   "max": [
+    7652.2,
+    464.8,
+    253.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    564.0,
+    15.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-FONDO-MATERIAL-001",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GH-FONDO-MATERIAL-001",
+   "min": [
+    7103.2,
+    -90.2,
+    125.0
+   ],
+   "max": [
+    7637.2,
+    449.8,
+    140.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    534.0,
+    540.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "GP-RSMLC",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GP-RSMLC",
+   "min": [
+    7075.2,
+    -105.2,
+    125.0
+   ],
+   "max": [
+    7088.2,
+    464.8,
+    165.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    13.0,
+    570.0,
+    40.0
+   ]
+  },
+  {
+   "nombre": "GP-RSMLC#1",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GP-RSMLC#1",
+   "min": [
+    7652.2,
+    -105.2,
+    125.0
+   ],
+   "max": [
+    7665.2,
+    464.8,
+    165.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    13.0,
+    570.0,
+    40.0
+   ]
+  },
+  {
+   "nombre": "GH-FRENTE-0003#4",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GH-FRENTE-0003#4",
+   "min": [
+    7061.2,
+    -120.2,
+    276.5
+   ],
+   "max": [
+    7679.2,
+    -105.2,
+    450.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    618.0,
+    15.0,
+    173.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-DE-0004#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GH-LATERAL-DE-0004#3",
+   "min": [
+    7637.2,
+    -90.2,
+    301.5
+   ],
+   "max": [
+    7652.2,
+    449.8,
+    430.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    540.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-IZ-0005#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GH-LATERAL-IZ-0005#3",
+   "min": [
+    7088.2,
+    -90.2,
+    301.5
+   ],
+   "max": [
+    7103.2,
+    449.8,
+    430.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    540.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-FRENTE-0006#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GH-LATERAL-FRENTE-0006#3",
+   "min": [
+    7088.2,
+    -105.2,
+    301.5
+   ],
+   "max": [
+    7652.2,
+    -90.2,
+    430.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    564.0,
+    15.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-ATRAS-0007#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GH-LATERAL-ATRAS-0007#3",
+   "min": [
+    7088.2,
+    449.8,
+    301.5
+   ],
+   "max": [
+    7652.2,
+    464.8,
+    430.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    564.0,
+    15.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-FONDO-MATERIAL-001",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GH-FONDO-MATERIAL-001",
+   "min": [
+    7103.2,
+    -90.2,
+    301.5
+   ],
+   "max": [
+    7637.2,
+    449.8,
+    316.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    534.0,
+    540.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "GP-RSMLC",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GP-RSMLC",
+   "min": [
+    7075.2,
+    -105.2,
+    301.5
+   ],
+   "max": [
+    7088.2,
+    464.8,
+    341.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    13.0,
+    570.0,
+    40.0
+   ]
+  },
+  {
+   "nombre": "GP-RSMLC#1",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GP-RSMLC#1",
+   "min": [
+    7652.2,
+    -105.2,
+    301.5
+   ],
+   "max": [
+    7665.2,
+    464.8,
+    341.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    13.0,
+    570.0,
+    40.0
+   ]
+  },
+  {
+   "nombre": "PUNRM-PA#3",
+   "ruta": "Puertas dinamicas abatibles#2/PUNRM#2/PUNRM-PA#3",
+   "min": [
+    7061.2,
+    -120.2,
+    670.0
+   ],
+   "max": [
+    7679.2,
+    -105.2,
+    1567.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    618.0,
+    15.0,
+    897.0
+   ]
+  },
+  {
+   "nombre": "ESPCL-T-01",
+   "ruta": "EMPOTRADO-DOBLE-MARCO#1/ESPCL#1/ESPCL-T-01",
+   "min": [
+    7075.2,
+    -105.2,
+    1555.0
+   ],
+   "max": [
+    7665.2,
+    -5.2,
+    1570.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    590.0,
+    100.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "ESPCL-LD-02",
+   "ruta": "EMPOTRADO-DOBLE-MARCO#1/ESPCL#1/ESPCL-LD-02",
+   "min": [
+    7665.2,
+    -105.2,
+    115.0
+   ],
+   "max": [
+    7680.2,
+    494.8,
+    1570.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    600.0,
+    1455.0
+   ]
+  },
+  {
+   "nombre": "ESPCL-PI-02",
+   "ruta": "EMPOTRADO-DOBLE-MARCO#1/ESPCL#1/ESPCL-PI-02",
+   "min": [
+    7060.2,
+    -105.2,
+    100.0
+   ],
+   "max": [
+    7680.2,
+    494.8,
+    115.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    620.0,
+    600.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "ESPCL-T-01",
+   "ruta": "EMPOTRADO-DOBLE-MARCO#1/ESPCL#1/ESPCL-T-01",
+   "min": [
+    7075.2,
+    379.8,
+    1555.0
+   ],
+   "max": [
+    7665.2,
+    479.8,
+    1570.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    590.0,
+    100.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "ZOCALO-ATRAS-01",
+   "ruta": "ZOCALO-10CM#3/ZOCALO-001#5/ZOCALO-ATRAS-01",
+   "min": [
+    7060.2,
+    479.8,
+    0.0
+   ],
+   "max": [
+    7680.2,
+    494.8,
+    100.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    620.0,
+    15.0,
+    100.0
+   ]
+  },
+  {
+   "nombre": "ZOCALO-DE-03",
+   "ruta": "ZOCALO-10CM#3/ZOCALO-001#5/ZOCALO-DE-03",
+   "min": [
+    7060.2,
+    -40.2,
+    0.0
+   ],
+   "max": [
+    7075.2,
+    479.8,
+    100.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    520.0,
+    100.0
+   ]
+  },
+  {
+   "nombre": "ZOCALO-IZ-04",
+   "ruta": "ZOCALO-10CM#3/ZOCALO-001#5/ZOCALO-IZ-04",
+   "min": [
+    7665.2,
+    -40.2,
+    0.0
+   ],
+   "max": [
+    7680.2,
+    479.8,
+    100.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    520.0,
+    100.0
+   ]
+  },
+  {
+   "nombre": "ZOCALO-ALANTE-02",
+   "ruta": "ZOCALO-10CM#3/ZOCALO-001#5/ZOCALO-ALANTE-02",
+   "min": [
+    7060.2,
+    -55.2,
+    0.0
+   ],
+   "max": [
+    7680.2,
+    -40.2,
+    100.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    620.0,
+    15.0,
+    100.0
+   ]
+  },
+  {
+   "nombre": "ZOCALO-DE-03",
+   "ruta": "ZOCALO-10CM#3/ZOCALO-001#5/ZOCALO-DE-03",
+   "min": [
+    7362.7,
+    -40.2,
+    0.0
+   ],
+   "max": [
+    7377.7,
+    479.8,
+    100.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    520.0,
+    100.0
+   ]
+  },
+  {
+   "nombre": "REPIZA@1#7",
+   "ruta": "REPIZA@1#7",
+   "min": [
+    7075.2,
+    379.8,
+    435.0
+   ],
+   "max": [
+    7665.2,
+    479.8,
+    450.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    590.0,
+    100.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "fondo 15mm#1",
+   "ruta": "fondo 15mm#1",
+   "min": [
+    7060.2,
+    479.8,
+    115.0
+   ],
+   "max": [
+    7665.2,
+    494.8,
+    1570.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    605.0,
+    15.0,
+    1455.0
+   ]
+  },
+  {
+   "nombre": "REPIZA@1#7",
+   "ruta": "REPIZA@1#7",
+   "min": [
+    7075.2,
+    -105.2,
+    435.0
+   ],
+   "max": [
+    7665.2,
+    -5.2,
+    450.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    590.0,
+    100.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "REPIZA@1#9",
+   "ruta": "REPIZA@1#9",
+   "min": [
+    7060.2,
+    -105.2,
+    450.0
+   ],
+   "max": [
+    7665.2,
+    479.8,
+    465.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    605.0,
+    585.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "REPIZA@1#8",
+   "ruta": "REPIZA@1#8",
+   "min": [
+    7060.2,
+    -105.2,
+    115.0
+   ],
+   "max": [
+    7075.2,
+    479.8,
+    450.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    585.0,
+    335.0
+   ]
+  },
+  {
+   "nombre": "Componente#9",
+   "ruta": "Componente#9",
+   "min": [
+    7075.2,
+    369.5,
+    1555.0
+   ],
+   "max": [
+    7665.2,
+    479.8,
+    1570.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    590.0,
+    110.3,
+    15.0
+   ]
+  },
+  {
+   "nombre": "Componente#4",
+   "ruta": "Componente#4",
+   "min": [
+    4790.2,
+    494.8,
+    0.0
+   ],
+   "max": [
+    7690.2,
+    569.8,
+    2480.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    2900.0,
+    75.0,
+    2480.0
+   ]
+  },
+  {
+   "nombre": "REPIZA@1#1",
+   "ruta": "Componente#5/REPIZA@1#1",
+   "min": [
+    6735.2,
+    -105.2,
+    2410.0
+   ],
+   "max": [
+    7665.2,
+    -5.2,
+    2425.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    930.0,
+    100.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "PUNRM-PA#3",
+   "ruta": "Componente#5/Puertas dinamicas abatibles#1/PUNRM#1/PUNRM-PA#3",
+   "min": [
+    6721.2,
+    -120.2,
+    1570.0
+   ],
+   "max": [
+    7199.2,
+    -105.2,
+    2425.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    478.0,
+    15.0,
+    855.0
+   ]
+  },
+  {
+   "nombre": "PUNRM-PA#3",
+   "ruta": "Componente#5/Puertas dinamicas abatibles#1/PUNRM#1/PUNRM-PA#3",
+   "min": [
+    7201.2,
+    -120.2,
+    1570.0
+   ],
+   "max": [
+    7679.2,
+    -105.2,
+    2425.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    478.0,
+    15.0,
+    855.0
+   ]
+  },
+  {
+   "nombre": "MALEST-MA",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-MA",
+   "min": [
+    6735.2,
+    -105.2,
+    1570.0
+   ],
+   "max": [
+    7665.2,
+    494.8,
+    1585.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    930.0,
+    600.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "MALEST-MR",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-MR",
+   "min": [
+    6735.2,
+    -105.2,
+    2425.0
+   ],
+   "max": [
+    7665.2,
+    494.8,
+    2440.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    930.0,
+    600.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "MALEST-RD",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-RD",
+   "min": [
+    7465.2,
+    479.8,
+    1585.0
+   ],
+   "max": [
+    7665.2,
+    494.8,
+    2425.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    200.0,
+    15.0,
+    840.0
+   ]
+  },
+  {
+   "nombre": "MALEST-MD",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-MD",
+   "min": [
+    7665.2,
+    -105.2,
+    1570.0
+   ],
+   "max": [
+    7680.2,
+    494.8,
+    2440.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    600.0,
+    870.0
+   ]
+  },
+  {
+   "nombre": "MALEST-MI",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-MI",
+   "min": [
+    6720.2,
+    -105.2,
+    1570.0
+   ],
+   "max": [
+    6735.2,
+    494.8,
+    2440.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    600.0,
+    870.0
+   ]
+  },
+  {
+   "nombre": "MALEST-RI",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-RI",
+   "min": [
+    6735.2,
+    479.8,
+    1585.0
+   ],
+   "max": [
+    6935.2,
+    494.8,
+    2425.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    200.0,
+    15.0,
+    840.0
+   ]
+  },
+  {
+   "nombre": "REPIZA@1#1",
+   "ruta": "Componente#5/REPIZA@1#1",
+   "min": [
+    5775.2,
+    -105.2,
+    2410.0
+   ],
+   "max": [
+    6705.2,
+    -5.2,
+    2425.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    930.0,
+    100.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "PUNRM-PA#3",
+   "ruta": "Componente#5/Puertas dinamicas abatibles#1/PUNRM#1/PUNRM-PA#3",
+   "min": [
+    5761.2,
+    -120.2,
+    1570.0
+   ],
+   "max": [
+    6239.2,
+    -105.2,
+    2425.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    478.0,
+    15.0,
+    855.0
+   ]
+  },
+  {
+   "nombre": "PUNRM-PA#3",
+   "ruta": "Componente#5/Puertas dinamicas abatibles#1/PUNRM#1/PUNRM-PA#3",
+   "min": [
+    6241.2,
+    -120.2,
+    1570.0
+   ],
+   "max": [
+    6719.2,
+    -105.2,
+    2425.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    478.0,
+    15.0,
+    855.0
+   ]
+  },
+  {
+   "nombre": "MALEST-MA",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-MA",
+   "min": [
+    5775.2,
+    -105.2,
+    1570.0
+   ],
+   "max": [
+    6705.2,
+    494.8,
+    1585.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    930.0,
+    600.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "MALEST-MR",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-MR",
+   "min": [
+    5775.2,
+    -105.2,
+    2425.0
+   ],
+   "max": [
+    6705.2,
+    494.8,
+    2440.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    930.0,
+    600.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "MALEST-RD",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-RD",
+   "min": [
+    6505.2,
+    479.8,
+    1585.0
+   ],
+   "max": [
+    6705.2,
+    494.8,
+    2425.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    200.0,
+    15.0,
+    840.0
+   ]
+  },
+  {
+   "nombre": "MALEST-MD",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-MD",
+   "min": [
+    6705.2,
+    -105.2,
+    1570.0
+   ],
+   "max": [
+    6720.2,
+    494.8,
+    2440.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    600.0,
+    870.0
+   ]
+  },
+  {
+   "nombre": "MALEST-MI",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-MI",
+   "min": [
+    5760.2,
+    -105.2,
+    1570.0
+   ],
+   "max": [
+    5775.2,
+    494.8,
+    2440.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    600.0,
+    870.0
+   ]
+  },
+  {
+   "nombre": "MALEST-RI",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-RI",
+   "min": [
+    5775.2,
+    479.8,
+    1585.0
+   ],
+   "max": [
+    5975.2,
+    494.8,
+    2425.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    200.0,
+    15.0,
+    840.0
+   ]
+  },
+  {
+   "nombre": "REPIZA@1#1",
+   "ruta": "Componente#5/REPIZA@1#1",
+   "min": [
+    4815.2,
+    -105.2,
+    2410.0
+   ],
+   "max": [
+    5745.2,
+    -5.2,
+    2425.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    930.0,
+    100.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "PUNRM-PA#3",
+   "ruta": "Componente#5/Puertas dinamicas abatibles#1/PUNRM#1/PUNRM-PA#3",
+   "min": [
+    4801.2,
+    -120.2,
+    1570.0
+   ],
+   "max": [
+    5279.2,
+    -105.2,
+    2425.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    478.0,
+    15.0,
+    855.0
+   ]
+  },
+  {
+   "nombre": "PUNRM-PA#3",
+   "ruta": "Componente#5/Puertas dinamicas abatibles#1/PUNRM#1/PUNRM-PA#3",
+   "min": [
+    5281.2,
+    -120.2,
+    1570.0
+   ],
+   "max": [
+    5759.2,
+    -105.2,
+    2425.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    478.0,
+    15.0,
+    855.0
+   ]
+  },
+  {
+   "nombre": "MALEST-MA",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-MA",
+   "min": [
+    4815.2,
+    -105.2,
+    1570.0
+   ],
+   "max": [
+    5745.2,
+    494.8,
+    1585.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    930.0,
+    600.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "MALEST-MR",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-MR",
+   "min": [
+    4815.2,
+    -105.2,
+    2425.0
+   ],
+   "max": [
+    5745.2,
+    494.8,
+    2440.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    930.0,
+    600.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "MALEST-RD",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-RD",
+   "min": [
+    5545.2,
+    479.8,
+    1585.0
+   ],
+   "max": [
+    5745.2,
+    494.8,
+    2425.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    200.0,
+    15.0,
+    840.0
+   ]
+  },
+  {
+   "nombre": "MALEST-MD",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-MD",
+   "min": [
+    5745.2,
+    -105.2,
+    1570.0
+   ],
+   "max": [
+    5760.2,
+    494.8,
+    2440.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    600.0,
+    870.0
+   ]
+  },
+  {
+   "nombre": "MALEST-MI",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-MI",
+   "min": [
+    4800.2,
+    -105.2,
+    1570.0
+   ],
+   "max": [
+    4815.2,
+    494.8,
+    2440.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    600.0,
+    870.0
+   ]
+  },
+  {
+   "nombre": "MALEST-RI",
+   "ruta": "Componente#5/MA-CON-TECHO#2/MALEST#1/MALEST-RI",
+   "min": [
+    4815.2,
+    479.8,
+    1585.0
+   ],
+   "max": [
+    5015.2,
+    494.8,
+    2425.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    200.0,
+    15.0,
+    840.0
+   ]
+  },
+  {
+   "nombre": "ZOCALO-ATRAS-01",
+   "ruta": "ZOCALO-10CM#3/ZOCALO-001#5/ZOCALO-ATRAS-01",
+   "min": [
+    4799.9,
+    479.8,
+    0.0
+   ],
+   "max": [
+    5419.9,
+    494.8,
+    100.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    620.0,
+    15.0,
+    100.0
+   ]
+  },
+  {
+   "nombre": "ZOCALO-DE-03",
+   "ruta": "ZOCALO-10CM#3/ZOCALO-001#5/ZOCALO-DE-03",
+   "min": [
+    5404.9,
+    -40.2,
+    0.0
+   ],
+   "max": [
+    5419.9,
+    479.8,
+    100.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    520.0,
+    100.0
+   ]
+  },
+  {
+   "nombre": "ZOCALO-IZ-04",
+   "ruta": "ZOCALO-10CM#3/ZOCALO-001#5/ZOCALO-IZ-04",
+   "min": [
+    4799.9,
+    -40.2,
+    0.0
+   ],
+   "max": [
+    4814.9,
+    479.8,
+    100.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    520.0,
+    100.0
+   ]
+  },
+  {
+   "nombre": "ZOCALO-ALANTE-02",
+   "ruta": "ZOCALO-10CM#3/ZOCALO-001#5/ZOCALO-ALANTE-02",
+   "min": [
+    4799.9,
+    -55.2,
+    0.0
+   ],
+   "max": [
+    5419.9,
+    -40.2,
+    100.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    620.0,
+    15.0,
+    100.0
+   ]
+  },
+  {
+   "nombre": "ZOCALO-DE-03",
+   "ruta": "ZOCALO-10CM#3/ZOCALO-001#5/ZOCALO-DE-03",
+   "min": [
+    5102.4,
+    -40.2,
+    0.0
+   ],
+   "max": [
+    5117.4,
+    479.8,
+    100.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    520.0,
+    100.0
+   ]
+  },
+  {
+   "nombre": "REPIZA@1#9",
+   "ruta": "REPIZA@1#9",
+   "min": [
+    4814.9,
+    -105.2,
+    450.0
+   ],
+   "max": [
+    5419.9,
+    479.8,
+    465.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    605.0,
+    585.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "GH-FRENTE-0003#4",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GH-FRENTE-0003#4",
+   "min": [
+    4800.9,
+    -120.2,
+    100.0
+   ],
+   "max": [
+    5418.9,
+    -105.2,
+    273.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    618.0,
+    15.0,
+    173.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-DE-0004#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GH-LATERAL-DE-0004#3",
+   "min": [
+    4827.9,
+    -90.2,
+    125.0
+   ],
+   "max": [
+    4842.9,
+    449.8,
+    253.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    540.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-IZ-0005#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GH-LATERAL-IZ-0005#3",
+   "min": [
+    5376.9,
+    -90.2,
+    125.0
+   ],
+   "max": [
+    5391.9,
+    449.8,
+    253.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    540.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-FRENTE-0006#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GH-LATERAL-FRENTE-0006#3",
+   "min": [
+    4827.9,
+    -105.2,
+    125.0
+   ],
+   "max": [
+    5391.9,
+    -90.2,
+    253.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    564.0,
+    15.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-ATRAS-0007#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GH-LATERAL-ATRAS-0007#3",
+   "min": [
+    4827.9,
+    449.8,
+    125.0
+   ],
+   "max": [
+    5391.9,
+    464.8,
+    253.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    564.0,
+    15.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-FONDO-MATERIAL-001",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GH-FONDO-MATERIAL-001",
+   "min": [
+    4842.9,
+    -90.2,
+    125.0
+   ],
+   "max": [
+    5376.9,
+    449.8,
+    140.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    534.0,
+    540.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "GP-RSMLC",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GP-RSMLC",
+   "min": [
+    5391.9,
+    -105.2,
+    125.0
+   ],
+   "max": [
+    5404.9,
+    464.8,
+    165.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    13.0,
+    570.0,
+    40.0
+   ]
+  },
+  {
+   "nombre": "GP-RSMLC#1",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#59/GP-RSMLC#1",
+   "min": [
+    4814.9,
+    -105.2,
+    125.0
+   ],
+   "max": [
+    4827.9,
+    464.8,
+    165.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    13.0,
+    570.0,
+    40.0
+   ]
+  },
+  {
+   "nombre": "GH-FRENTE-0003#4",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GH-FRENTE-0003#4",
+   "min": [
+    4800.9,
+    -120.2,
+    276.5
+   ],
+   "max": [
+    5418.9,
+    -105.2,
+    450.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    618.0,
+    15.0,
+    173.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-DE-0004#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GH-LATERAL-DE-0004#3",
+   "min": [
+    4827.9,
+    -90.2,
+    301.5
+   ],
+   "max": [
+    4842.9,
+    449.8,
+    430.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    540.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-IZ-0005#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GH-LATERAL-IZ-0005#3",
+   "min": [
+    5376.9,
+    -90.2,
+    301.5
+   ],
+   "max": [
+    5391.9,
+    449.8,
+    430.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    540.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-FRENTE-0006#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GH-LATERAL-FRENTE-0006#3",
+   "min": [
+    4827.9,
+    -105.2,
+    301.5
+   ],
+   "max": [
+    5391.9,
+    -90.2,
+    430.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    564.0,
+    15.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-LATERAL-ATRAS-0007#3",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GH-LATERAL-ATRAS-0007#3",
+   "min": [
+    4827.9,
+    449.8,
+    301.5
+   ],
+   "max": [
+    5391.9,
+    464.8,
+    430.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    564.0,
+    15.0,
+    128.5
+   ]
+  },
+  {
+   "nombre": "GH-FONDO-MATERIAL-001",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GH-FONDO-MATERIAL-001",
+   "min": [
+    4842.9,
+    -90.2,
+    301.5
+   ],
+   "max": [
+    5376.9,
+    449.8,
+    316.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    534.0,
+    540.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "GP-RSMLC",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GP-RSMLC",
+   "min": [
+    5391.9,
+    -105.2,
+    301.5
+   ],
+   "max": [
+    5404.9,
+    464.8,
+    341.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    13.0,
+    570.0,
+    40.0
+   ]
+  },
+  {
+   "nombre": "GP-RSMLC#1",
+   "ruta": "GAVETA VETAS#2/PadreGavetas#21/GP-0001#63/GP-RSMLC#1",
+   "min": [
+    4814.9,
+    -105.2,
+    301.5
+   ],
+   "max": [
+    4827.9,
+    464.8,
+    341.5
+   ],
+   "n_vertices": 8,
+   "dim": [
+    13.0,
+    570.0,
+    40.0
+   ]
+  },
+  {
+   "nombre": "REPIZA@1#7",
+   "ruta": "REPIZA@1#7",
+   "min": [
+    4814.9,
+    379.8,
+    435.0
+   ],
+   "max": [
+    5404.9,
+    479.8,
+    450.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    590.0,
+    100.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "ESPCL-T-01",
+   "ruta": "EMPOTRADO-DOBLE-MARCO#1/ESPCL#1/ESPCL-T-01",
+   "min": [
+    4814.9,
+    -105.2,
+    1555.0
+   ],
+   "max": [
+    5404.9,
+    -5.2,
+    1570.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    590.0,
+    100.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "ESPCL-LD-02",
+   "ruta": "EMPOTRADO-DOBLE-MARCO#1/ESPCL#1/ESPCL-LD-02",
+   "min": [
+    4799.9,
+    -105.2,
+    115.0
+   ],
+   "max": [
+    4814.9,
+    494.8,
+    1570.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    600.0,
+    1455.0
+   ]
+  },
+  {
+   "nombre": "ESPCL-PI-02",
+   "ruta": "EMPOTRADO-DOBLE-MARCO#1/ESPCL#1/ESPCL-PI-02",
+   "min": [
+    4799.9,
+    -105.2,
+    100.0
+   ],
+   "max": [
+    5419.9,
+    494.8,
+    115.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    620.0,
+    600.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "ESPCL-T-01",
+   "ruta": "EMPOTRADO-DOBLE-MARCO#1/ESPCL#1/ESPCL-T-01",
+   "min": [
+    4814.9,
+    379.8,
+    1555.0
+   ],
+   "max": [
+    5404.9,
+    479.8,
+    1570.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    590.0,
+    100.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "REPIZA@1#7",
+   "ruta": "REPIZA@1#7",
+   "min": [
+    4814.9,
+    -105.2,
+    435.0
+   ],
+   "max": [
+    5404.9,
+    -5.2,
+    450.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    590.0,
+    100.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "fondo 15mm#1",
+   "ruta": "fondo 15mm#1",
+   "min": [
+    4814.9,
+    479.8,
+    115.0
+   ],
+   "max": [
+    5419.9,
+    494.8,
+    1570.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    605.0,
+    15.0,
+    1455.0
+   ]
+  },
+  {
+   "nombre": "REPIZA@1#8",
+   "ruta": "REPIZA@1#8",
+   "min": [
+    5404.9,
+    -105.2,
+    115.0
+   ],
+   "max": [
+    5419.9,
+    479.8,
+    450.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    585.0,
+    335.0
+   ]
+  },
+  {
+   "nombre": "PTRSOP022",
+   "ruta": "DIVISIONES-CON-TOPE-Y-AMARRES#2/PTR0101#2/PTRSOP01#2/PTRSOP022",
+   "min": [
+    4814.9,
+    379.8,
+    670.0
+   ],
+   "max": [
+    5404.9,
+    479.8,
+    685.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    590.0,
+    100.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "PTRSOP0-125",
+   "ruta": "DIVISIONES-CON-TOPE-Y-AMARRES#2/PTR0101#2/PTRSOP01#2/PTRSOP0-125",
+   "min": [
+    4814.9,
+    -105.2,
+    670.0
+   ],
+   "max": [
+    5404.9,
+    -5.2,
+    685.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    590.0,
+    100.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "PTRSOP024-TO",
+   "ruta": "DIVISIONES-CON-TOPE-Y-AMARRES#2/PTR0101#2/PTRSOP01#2/PTRSOP024-TO",
+   "min": [
+    4814.9,
+    -105.2,
+    685.0
+   ],
+   "max": [
+    5404.9,
+    479.8,
+    700.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    590.0,
+    585.0,
+    15.0
+   ]
+  },
+  {
+   "nombre": "lateral aire#1",
+   "ruta": "lateral aire#1",
+   "min": [
+    5404.9,
+    -105.2,
+    670.0
+   ],
+   "max": [
+    5419.9,
+    479.8,
+    1570.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    15.0,
+    585.0,
+    900.0
+   ]
+  },
+  {
+   "nombre": "PUNRM-PA#3",
+   "ruta": "Puertas dinamicas abatibles#2/PUNRM#2/PUNRM-PA#3",
+   "min": [
+    4800.9,
+    -120.2,
+    670.0
+   ],
+   "max": [
+    5418.9,
+    -105.2,
+    1567.0
+   ],
+   "n_vertices": 8,
+   "dim": [
+    618.0,
+    15.0,
+    897.0
+   ]
+  }
+ ]
+}
